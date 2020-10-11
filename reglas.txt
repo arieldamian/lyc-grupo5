@@ -1,0 +1,41 @@
+<programa> -> <sentencia>
+<programa> -> <programa> <sentencias> 
+<sentencias> -> <sentencias> <sentencia>
+<sentencia> -> <declaracion> 
+<sentencia> -> <asignacion>
+<sentencia> -> <escritura>
+<sentencia> -> <lectura>
+<sentencia> -> <condicional>
+<declaracion> -> DIM < <var> > AS < <tipo> >
+<var> -> <var> , ID 
+<var> -> ID
+<tipo> -> <tipo> , Float|Integer
+<tipo> -> Float|Integer
+<asignacion> -> CONST ID = <termino> ;
+<termino> -> <factor>
+<factor> -> ID
+<factor> -> CTE
+<escritura> -> PUT <string> | <factor> ;
+<string> -> CADENA_CARACTERES
+<lectura> -> GET ID ;
+<asignacion> -> ID : CTE ;
+<asignacion> -> ID : <termino>+<termino> ;
+<condicional> -> IF ( <condicion> ) { <sentencias> } 
+<condicional> -> IF ( <condicion> ) { <sentencias> } <else>
+<condicional> -> IF ( <condicion> ) <sentencia> 
+<condicional> -> IF ( <condicion> ) { <sentencia> }
+<else> -> Else { <sentencias> }
+<condicional> -> WHILE ( <condicion> ) { <sentencias> } 
+<condicion> -> <condicion> and <expresion>
+<condicion> -> <expresion>
+<expresion> -> ID <=|>|<> <factor> 
+<termino> -> ( <factor> / <factor> )
+<termino> -> <factor> * <factor> 
+<factor> -> ( <termino> )
+<termino> -> ( ID * <func_contar> )
+<func_contar> -> contar ( <termino> ; <lista> )
+<lista> -> <lista> , <termino>
+<lista> -> <factor>
+<factor> -> CTE
+<factor> -> ID
+<factor> -> <lista>
