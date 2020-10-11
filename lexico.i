@@ -30,8 +30,8 @@ COR_ABRE			"["
 COR_CIERRA			"]"
 LLAVE_ABRE			"{"
 LLAVE_CIERRA		"}"
-SIMBOLO_SEP			","
-SIMBOLO_TER			";"
+SIMB_COMA			","
+SIMB_PUNTO_COMA		";"
 
 %%
 
@@ -57,8 +57,8 @@ SIMBOLO_TER			";"
 {COR_CIERRA}       		printf("\nCOR_CIERRA: %s\n", yytext);
 {LLAVE_ABRE}       		printf("\nLLAVE_ABRE: %s\n", yytext);
 {LLAVE_CIERRA}       	printf("\nLLAVE_CIERRA: %s\n", yytext);
-{SIMBOLO_SEP}       	printf("\nSIMBOLO_SEP: %s\n", yytext);
-{SIMBOLO_TER}       	printf("\nSIMBOLO_TER: %s\n", yytext);
+{SIMB_COMA}       		printf("\nSIMB_COMA: %s\n", yytext);
+{SIMB_PUNTO_COMA}       printf("\nSIMB_PUNTO_COMA: %s\n", yytext);
 "\n"
 "\t"
 
