@@ -11,23 +11,25 @@
 <var> -> ID
 <tipo> -> <tipo> , Float|Integer
 <tipo> -> Float|Integer
-<asignacion> -> CONST ID = <termino> ;
+
 <termino> -> <factor>
 <factor> -> ID
 <factor> -> CTE
 <escritura> -> PUT <string> | <factor> ;
 <string> -> CADENA_CARACTERES
 <lectura> -> GET ID ;
+<asignacion> -> CONST ID = <termino> ;
 <asignacion> -> ID : CTE ;
 <asignacion> -> ID : <termino>+<termino> ;
 <condicional> -> IF ( <condicion> ) { <sentencias> } 
 <condicional> -> IF ( <condicion> ) { <sentencias> } <else>
 <condicional> -> IF ( <condicion> ) <sentencia> 
 <condicional> -> IF ( <condicion> ) { <sentencia> }
-<else> -> Else { <sentencias> }
-<condicional> -> WHILE ( <condicion> ) { <sentencias> } 
 <condicion> -> <condicion> and <expresion>
 <condicion> -> <expresion>
+<else> -> Else { <sentencias> }
+<condicional> -> WHILE ( <condicion> ) { <sentencias> } 
+
 <expresion> -> ID <=|>|<> <factor> 
 <termino> -> ( <factor> / <factor> )
 <termino> -> <factor> * <factor> 

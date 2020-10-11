@@ -11,9 +11,17 @@ FILE  *yyin;
 
 %}
 
-%token PALABRA_RESERVADA
-%token DIGITO
-%token LETRA
+%token DIM
+%token FLOAT
+%token INTEGER
+%token PUT
+%token GET
+%token CONST
+%token WHILE
+%token IF
+%token ELSE
+%token AS
+%token AND
 %token CTE_ENTERA
 %token CTE_REAL
 %token CADENA_CARACTERES
@@ -37,30 +45,85 @@ FILE  *yyin;
 %token SIMB_PUNTO_COMA
 
 %%
+
+sentencias:
+  sentencia
+  | sentencias sentencia
+  ;
+
 sentencia:  	   
-	asignacion {printf(" FIN\n");} ;
+  declaracion {printf("--------------FIN DECLARACION--------------\n");}
+  | asignacion {printf("--------------FIN ASIGNACION--------------\n");}
+  | escritura {printf("--------------FIN ESCRITURA--------------\n");}
+  | lectura {printf("--------------FIN LECTURA--------------\n");}
+  | condicional {printf("--------------FIN CONDICIONAL--------------\n");}
+  ;
 
-asignacion: 
-          ID OP_AS expresion {printf("    ID = Expresion es ASIGNACION\n");}
-	  ;
+variable:
+  ID {printf("ID es VARIABLE\n");}
+  | variable SIMB_COMA ID {printf("variable,ID es VARIABLE\n");}
+  ;
 
-expresion:
-         termino {printf("    Termino es Expresion\n");}
-	 |expresion OP_SUM termino {printf("    Expresion+Termino es Expresion\n");}
-	 |expresion OP_RES termino {printf("    Expresion-Termino es Expresion\n");}
-	 ;
-
-termino: 
-       factor {printf("    Factor es Termino\n");}
-       |termino OP_MUL factor {printf("     Termino*Factor es Termino\n");}
-       |termino OP_DIV factor {printf("     Termino/Factor es Termino\n");}
-       ;
+tipo:
+  FLOAT {printf("FLOAT es TIPO\n");}
+  | INTEGER {printf("INTEGER es TIPO\n");}
+  | tipo SIMB_COMA FLOAT {printf("tipo , FLOAT es TIPO\n");}
+  | tipo SIMB_COMA INTEGER {printf("tipo , INTEGER es TIPO\n");}
+  ;
 
 factor: 
-      ID {printf("    ID es Factor \n");}
-      | CTE {printf("    CTE es Factor\n");}
-	| PA expresion PC {printf("    Expresion entre parentesis es Factor\n");}
-     	;
+  ID {printf("ID es Factor \n");}
+  | CTE_ENTERA {printf("CTE real es Factor\n");}
+  | CTE_REAL {printf("CTE real es Factor\n");}
+  ;
+
+termino: 
+ factor {printf("    Factor es Termino\n");}
+ | termino OP_MULT factor {printf("     Termino*Factor es Termino\n");}
+ | termino OP_DIV factor {printf("     Termino/Factor es Termino\n");}
+ ;
+
+declaracion: 
+  DIM OP_MENOR variable OP_MAYOR AS OP_MENOR tipo OP_MAYOR {printf("DIM <VARIABLE> AS <TIPO> es una DECLARACION\n");}
+  ;
+
+asignacion:
+  CONST ID OP_DEC CTE_ENTERA SIMB_PUNTO_COMA {printf("CONST ID = CTE_ENTERA; es ASIGNACION\n");}
+  | ID OP_ASIG CTE_ENTERA SIMB_PUNTO_COMA {printf("ID: CTE_ENTERA; es ASIGNACION\n");}
+  | ID OP_ASIG termino OP_SUMA termino SIMB_PUNTO_COMA  {printf("ID: termino + termino; es ASIGNACION\n");}
+  ;
+
+expresion:
+  ID OP_MENORIGUAL factor {printf("ID <= factor es EXPRESION \n");}
+  | ID OP_MAYOR factor {printf("ID > factor es EXPRESION \n");}
+  | ID OP_MENOR factor {printf("ID < factor es EXPRESION \n");}
+  | ID OP_DISTINTO factor {printf("ID <> factor es EXPRESION \n");}
+  ;
+   
+condicion:
+  expresion {printf("expresion es CONDICION\n");}
+  | condicion AND expresion {printf("condicion AND expresion es CONDICION\n");}
+  ;
+
+else:
+  ELSE LLAVE_ABRE sentencias LLAVE_CIERRA {printf("else {SENTENCIAS} es ELSE\n");}
+  ;
+
+condicional:
+  WHILE PAR_ABRE condicion PAR_CIERRA LLAVE_ABRE sentencias LLAVE_CIERRA {printf("WHILE (CONDICION) {SENTENCIAS} es CONDICIONAL\n");}
+  | IF PAR_ABRE condicion PAR_CIERRA LLAVE_ABRE sentencia LLAVE_CIERRA else  {printf("IF (CONDICION) {SENTENCIAS} ELSE es CONDICIONAL\n");}
+  | IF PAR_ABRE condicion PAR_CIERRA sentencia {printf("IF (CONDICION) SENTENCIAS es CONDICIONAL\n");}
+  ;
+
+escritura:
+  PUT CADENA_CARACTERES SIMB_PUNTO_COMA {printf("PUT STRING; es ESCRITURA\n");}
+  | PUT ID SIMB_PUNTO_COMA {printf("PUT ID; es ESCRITURA\n");}
+  ;
+
+lectura:
+  GET ID SIMB_PUNTO_COMA {printf("GET ID; es LECTURA\n");}
+  ;
+
 %%
 
 

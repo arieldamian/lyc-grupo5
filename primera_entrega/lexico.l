@@ -15,7 +15,6 @@ int yyerror(void);
 %option noyywrap  
 %option yylineno 
 
-PALABRA_RESERVADA	DIM|Float|Integer|PUT|GET|CONST|while|if|Else|"AS"|"and"
 DIGITO 				[0-9]
 LETRA  				[a-zA-Z]
 CTE_ENTERA  		{DIGITO}+
@@ -42,9 +41,17 @@ SIMB_PUNTO_COMA		";"
 
 %%
 
-{PALABRA_RESERVADA}     {printf("\nPALABRA_RESERVADA: %s\n", yytext); return PALABRA_RESERVADA;}
-{DIGITO}       			{printf("\nDIGITO: %s\n", yytext); return DIGITO;}
-{LETRA}       			{printf("\nLETRA: %s\n", yytext); return LETRA;}
+"DIM"					{printf("\nPALABRA RESERVADA: %s\n", yytext); return DIM;}	
+"Float"					{printf("\nPALABRA RESERVADA: %s\n", yytext); return FLOAT;}	
+"Integer"				{printf("\nPALABRA RESERVADA: %s\n", yytext); return INTEGER;}	
+"PUT"					{printf("\nPALABRA RESERVADA: %s\n", yytext); return PUT;}	
+"GET"					{printf("\nPALABRA RESERVADA: %s\n", yytext); return GET;}	
+"CONST"					{printf("\nPALABRA RESERVADA: %s\n", yytext); return CONST;}	
+"while"					{printf("\nPALABRA RESERVADA: %s\n", yytext); return WHILE;}	
+"if"					{printf("\nPALABRA RESERVADA: %s\n", yytext); return IF;}	
+"Else"					{printf("\nPALABRA RESERVADA: %s\n", yytext); return ELSE;}	
+"AS"					{printf("\nPALABRA RESERVADA: %s\n", yytext); return AS;}	
+"and"					{printf("\nPALABRA RESERVADA: %s\n", yytext); return AND;}	
 {CTE_ENTERA}       		{printf("\nCTE_ENTERA: %s\n", yytext); return CTE_ENTERA;}
 {CTE_REAL}         		{printf("\nCTE_REAL: %s\n", yytext); return CTE_REAL;}
 {CADENA_CARACTERES}     {printf("\nCADENA_CARACTERES: %s\n", yytext); return CADENA_CARACTERES;}
