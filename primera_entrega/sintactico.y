@@ -8,7 +8,6 @@ FILE  *yyin;
   int yyerror();
   int yylex();
 
-
 %}
 
 %token DIM
@@ -22,11 +21,12 @@ FILE  *yyin;
 %token ELSE
 %token AS
 %token AND
+%token CONTAR
 %token CTE_ENTERA
 %token CTE_REAL
 %token CADENA_CARACTERES
 %token ID
-%token OP_DEC
+%token OP_IGUAL
 %token OP_ASIG
 %token OP_SUMA
 %token OP_DISTINTO
@@ -75,12 +75,25 @@ factor:
   ID {printf("ID es Factor \n");}
   | CTE_ENTERA {printf("CTE real es Factor\n");}
   | CTE_REAL {printf("CTE real es Factor\n");}
+  | func_contar {printf("CTE real es Factor\n");}
+  ;
+
+func_contar:
+  CONTAR PAR_ABRE termino SIMB_PUNTO_COMA lista PAR_CIERRA {printf("CONTAR (termino ; lista) es una FUNC_CONTAR \n");}
+  ;
+
+lista:
+  lista SIMB_COMA termino {printf("LISTA, TERMINO es una LISTA \n");}
+  | COR_ABRE lista COR_CIERRA {printf("[lista] es una LISTA \n");}
+  | termino {printf("TERMINO es una LISTA \n");}
   ;
 
 termino: 
- factor {printf("    Factor es Termino\n");}
- | termino OP_MULT factor {printf("     Termino*Factor es Termino\n");}
- | termino OP_DIV factor {printf("     Termino/Factor es Termino\n");}
+ factor {printf("Factor es Termino\n");}
+ | termino OP_MULT factor {printf("Termino*Factor es Termino\n");}
+ | termino OP_DIV factor {printf("Termino/Factor es Termino\n");}
+ | PAR_ABRE termino OP_MULT factor PAR_CIERRA {printf("(Termino*Factor) es Termino\n");}
+ | PAR_ABRE termino OP_DIV factor PAR_CIERRA {printf("(Termino/Factor) es Termino\n");}
  ;
 
 declaracion: 
@@ -88,7 +101,7 @@ declaracion:
   ;
 
 asignacion:
-  CONST ID OP_DEC CTE_ENTERA SIMB_PUNTO_COMA {printf("CONST ID = CTE_ENTERA; es ASIGNACION\n");}
+  CONST ID OP_IGUAL CTE_ENTERA SIMB_PUNTO_COMA {printf("CONST ID = CTE_ENTERA; es ASIGNACION\n");}
   | ID OP_ASIG CTE_ENTERA SIMB_PUNTO_COMA {printf("ID: CTE_ENTERA; es ASIGNACION\n");}
   | ID OP_ASIG termino OP_SUMA termino SIMB_PUNTO_COMA  {printf("ID: termino + termino; es ASIGNACION\n");}
   ;

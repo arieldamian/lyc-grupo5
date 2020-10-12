@@ -11,7 +11,6 @@
 <var> -> ID
 <tipo> -> <tipo> , Float|Integer
 <tipo> -> Float|Integer
-
 <termino> -> <factor>
 <factor> -> ID
 <factor> -> CTE
@@ -29,7 +28,6 @@
 <condicion> -> <expresion>
 <else> -> Else { <sentencias> }
 <condicional> -> WHILE ( <condicion> ) { <sentencias> } 
-
 <expresion> -> ID <=|>|<> <factor> 
 <termino> -> ( <factor> / <factor> )
 <termino> -> <factor> * <factor> 

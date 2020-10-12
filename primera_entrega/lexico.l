@@ -21,7 +21,7 @@ CTE_ENTERA  		{DIGITO}+
 CTE_REAL			{DIGITO}+"."{DIGITO}+
 CADENA_CARACTERES   \".*\"
 ID          		{LETRA}({LETRA}|{DIGITO})*
-OP_DEC				"="
+OP_IGUAL			"="
 OP_ASIG				":"
 OP_SUMA				"+"
 OP_DISTINTO			"<>"
@@ -52,11 +52,12 @@ SIMB_PUNTO_COMA		";"
 "Else"					{printf("\nPALABRA RESERVADA: %s\n", yytext); return ELSE;}	
 "AS"					{printf("\nPALABRA RESERVADA: %s\n", yytext); return AS;}	
 "and"					{printf("\nPALABRA RESERVADA: %s\n", yytext); return AND;}	
+"contar"				{printf("\nPALABRA RESERVADA: %s\n", yytext); return CONTAR;}	
 {CTE_ENTERA}       		{printf("\nCTE_ENTERA: %s\n", yytext); return CTE_ENTERA;}
 {CTE_REAL}         		{printf("\nCTE_REAL: %s\n", yytext); return CTE_REAL;}
 {CADENA_CARACTERES}     {printf("\nCADENA_CARACTERES: %s\n", yytext); return CADENA_CARACTERES;}
 {ID}       				{printf("\nID: %s\n", yytext); return ID;}
-{OP_DEC}       			{printf("\nOP_DEC: %s\n", yytext); return OP_DEC;}
+{OP_IGUAL}       			{printf("\nOP_DEC: %s\n", yytext); return OP_IGUAL;}
 {OP_ASIG}       		{printf("\nOP_ASIG: %s\n", yytext); return OP_ASIG;}
 {OP_SUMA}       		{printf("\nOP_SUMA: %s\n", yytext); return OP_SUMA;}
 {OP_DISTINTO}       	{printf("\nOP_DISTINTO: %s\n", yytext); return OP_DISTINTO;}
