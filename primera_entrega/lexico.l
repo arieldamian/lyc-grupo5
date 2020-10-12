@@ -1,18 +1,31 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "y.tab.h"
+#define TODO_OK 1
+#define ERROR 0
+
+struct struct_tablaSimbolos
+{
+	char nombre[100];
+	char tipo[100];
+	char valor[50];
+	char longitud[100];
+};
+
+int push_TS(char*, char*);
+int crear_TS();
+
+int puntero_array = 0;
+struct struct_tablaSimbolos tablaSimbolos[10000];
+
 FILE  *yyin;
 int yylval;
 char *yyltext;
-
-
-int yyerror(void);
-
 %}
 
-%option noyywrap  
 %option yylineno 
 
 DIGITO 				[0-9]
@@ -53,11 +66,20 @@ SIMB_PUNTO_COMA		";"
 "AS"					{printf("\nPALABRA RESERVADA: %s\n", yytext); return AS;}	
 "and"					{printf("\nPALABRA RESERVADA: %s\n", yytext); return AND;}	
 "contar"				{printf("\nPALABRA RESERVADA: %s\n", yytext); return CONTAR;}	
-{CTE_ENTERA}       		{printf("\nCTE_ENTERA: %s\n", yytext); return CTE_ENTERA;}
-{CTE_REAL}         		{printf("\nCTE_REAL: %s\n", yytext); return CTE_REAL;}
-{CADENA_CARACTERES}     {printf("\nCADENA_CARACTERES: %s\n", yytext); return CADENA_CARACTERES;}
-{ID}       				{printf("\nID: %s\n", yytext); return ID;}
-{OP_IGUAL}       			{printf("\nOP_DEC: %s\n", yytext); return OP_IGUAL;}
+{CTE_ENTERA}       		{printf("\nCTE_ENTERA: %s\n", yytext); push_TS("CTE_ENTERA", yytext); return CTE_ENTERA;}
+{CTE_REAL}         		{printf("\nCTE_REAL: %s\n", yytext); push_TS("CTE_REAL", yytext); return CTE_REAL;}
+{CADENA_CARACTERES}		{ 
+							int cantCaracteres = strlen(yytext);
+							if(cantCaracteres <= 32) { //Cuenta las commillas tambien
+								push_TS("CADENA_CARACTERES", yytext);
+								return CADENA_CARACTERES;
+							} else {
+								printf("ERROR - String muy largo. Maximo 30 caracteres\n");
+								exit(3);
+							}
+						}
+{ID}       				{printf("\nID: %s\n", yytext); push_TS("ID", yytext); return ID;}
+{OP_IGUAL}       		{printf("\nOP_DEC: %s\n", yytext); return OP_IGUAL;}
 {OP_ASIG}       		{printf("\nOP_ASIG: %s\n", yytext); return OP_ASIG;}
 {OP_SUMA}       		{printf("\nOP_SUMA: %s\n", yytext); return OP_SUMA;}
 {OP_DISTINTO}       	{printf("\nOP_DISTINTO: %s\n", yytext); return OP_DISTINTO;}
@@ -80,4 +102,56 @@ SIMB_PUNTO_COMA		";"
 "\n\t"
 " "             		
 "\r\n"
-.			printf( "ERROR LEXICO : Caracter no reconocido: %s\n", yytext );
+.						printf( "ERROR LEXICO : Caracter no reconocido: %s\n", yytext );
+
+
+%%
+int yywrap() {
+	crear_TS();
+	return 1;
+}
+
+int push_TS(char* tipo, char* nombre)
+{
+	int i, posicion;
+	
+	for(i = 0; i < puntero_array; i++)
+	{
+		if(strcmp(tablaSimbolos[i].nombre, nombre) == 0)
+		{
+			return i;
+		}
+	}
+	strcpy(tablaSimbolos[puntero_array].tipo, tipo);
+	strcpy(tablaSimbolos[puntero_array].nombre, nombre);
+	posicion = puntero_array;
+	puntero_array++;
+	return posicion;
+}
+
+int crear_TS()
+{
+	FILE *archivo; 
+	int i;
+	archivo = fopen("ts.txt","w"); 
+
+	if (!archivo){	return ERROR; }
+
+	fprintf(archivo, "Nombre                        Tipo      Valor     Longitud\n");
+	
+	for (i = 0; i < puntero_array; i++)
+	{
+		if (strcmp(tablaSimbolos[i].tipo, "ID") == 0 )
+		{  
+			fprintf(archivo,"%-30s%-10s\n", tablaSimbolos[i].nombre, tablaSimbolos[i].tipo);
+		}
+		else
+		{
+			fprintf(archivo,"_%-29s%-10s\n", tablaSimbolos[i].nombre, tablaSimbolos[i].tipo);
+		}
+	}
+	fclose(archivo); 
+
+	return TODO_OK;
+}
+

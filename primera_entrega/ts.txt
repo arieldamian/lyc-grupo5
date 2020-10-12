@@ -1,0 +1,2 @@
+Nombre                        Tipo      Valor     Longitud
+_"Mati no presta atencion Mati no presta atencion Mati no presta atencion Mati no presta atencion"CADENA_CARACTERES
