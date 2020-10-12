@@ -74,7 +74,7 @@ SIMB_PUNTO_COMA		";"
 								push_TS("CADENA_CARACTERES", yytext);
 								return CADENA_CARACTERES;
 							} else {
-								printf("ERROR - String muy largo. Maximo 30 caracteres\n");
+								printf("ERROR - String muy largo. Maximo 30 caracteres. String: %s\n", yytext);
 								exit(3);
 							}
 						}
