@@ -35,6 +35,8 @@ LETRA  				[a-zA-Z]
 CTE_ENTERA  		{DIGITO}+
 CTE_REAL			{DIGITO}+"."{DIGITO}+
 CADENA_CARACTERES   \".*\"
+COMENTARIO_SIMPLE		"-/"([^-/]|\n)*?"/-"
+COMENTARIO_DOBLE		"-/"([^-/]|\n|{COMENTARIO_SIMPLE})*?"/-"
 ID          		{LETRA}({LETRA}|{DIGITO})*
 OP_IGUAL			"="
 OP_ASIG				":"
@@ -67,7 +69,9 @@ SIMB_PUNTO_COMA		";"
 "Else"					{printf("\nPALABRA RESERVADA: %s\n", yytext); return ELSE;}	
 "AS"					{printf("\nPALABRA RESERVADA: %s\n", yytext); return AS;}	
 "and"					{printf("\nPALABRA RESERVADA: %s\n", yytext); return AND;}	
-"contar"				{printf("\nPALABRA RESERVADA: %s\n", yytext); return CONTAR;}	
+"contar"				{printf("\nPALABRA RESERVADA: %s\n", yytext); return CONTAR;}
+{COMENTARIO_SIMPLE}	{  }
+{COMENTARIO_DOBLE}	{  }	
 {CTE_ENTERA}       		{
 												printf("\nCTE_ENTERA: %s\n", yytext);
 
