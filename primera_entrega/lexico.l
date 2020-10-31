@@ -74,6 +74,7 @@ SIMB_PUNTO_COMA		";"
 "OR"          {printf("\nPALABRA RESERVADA: %s\n", yytext); return OP_OR;}
 "or"          {printf("\nPALABRA RESERVADA: %s\n", yytext); return OP_OR;}
 "NOT"         {printf("\nPALABRA RESERVADA: %s\n", yytext); return OP_NOT;}
+"not"         {printf("\nPALABRA RESERVADA: %s\n", yytext); return OP_NOT;}
 {COMENTARIO_SIMPLE}	{  }
 {COMENTARIO_DOBLE}	{  }	
 {CTE_ENTERA}       		{
