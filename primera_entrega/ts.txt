@@ -6,7 +6,7 @@ suma                          ID
 nombre                        ID        
 _80                           CTE_ENTERA
 _"Prueba.txt LyC Tema 4!"     CADENA_CARACTERES
-_"Ingrese un valor entero para"CADENA_CARACTERES
+_"Ingrese un valor entero para a"CADENA_CARACTERES
 _0                            CTE_ENTERA
 _02.5                         CTE_REAL  
 _92                           CTE_ENTERA
