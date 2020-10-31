@@ -4,6 +4,8 @@
 #include <string.h>
 
 #include "y.tab.h"
+#define COTA_INT 2147483647
+#define COTA_FLOAT	3.402823E+38
 #define TODO_OK 1
 #define ERROR 0
 
@@ -66,16 +68,47 @@ SIMB_PUNTO_COMA		";"
 "AS"					{printf("\nPALABRA RESERVADA: %s\n", yytext); return AS;}	
 "and"					{printf("\nPALABRA RESERVADA: %s\n", yytext); return AND;}	
 "contar"				{printf("\nPALABRA RESERVADA: %s\n", yytext); return CONTAR;}	
-{CTE_ENTERA}       		{printf("\nCTE_ENTERA: %s\n", yytext); push_TS("CTE_ENTERA", yytext); return CTE_ENTERA;}
-{CTE_REAL}         		{printf("\nCTE_REAL: %s\n", yytext); push_TS("CTE_REAL", yytext); return CTE_REAL;}
-{CADENA_CARACTERES}		{ 
+{CTE_ENTERA}       		{
+												printf("\nCTE_ENTERA: %s\n", yytext);
+
+												int num = atoi(yytext); 
+												if(num >= COTA_INT*(-1) && num <= COTA_INT){
+													push_TS("CTE_ENTERA", yytext);
+													return CTE_ENTERA; 
+												}else{
+													printf("ERROR - Int fuera de rango.\n");
+													exit(1);
+												}
+											}
+{CTE_REAL}         		{
+												printf("\nCTE_REAL: %s\n", yytext);
+												double n;
+												n = atof(yytext);
+												
+												if(n >= COTA_FLOAT*(-1) && n <= COTA_FLOAT){
+													push_TS("CTE_REAL", yytext);
+													return CTE_REAL; 
+												}else{
+													printf("ERROR - Real fuera de rango.\n");
+													exit(2);
+												}
+											}
+{CADENA_CARACTERES}		{
 							int cantCaracteres = strlen(yytext);
 							if(cantCaracteres <= 32) { //Cuenta las commillas tambien
+								printf("\nCADENA CARATERES: %s\n", yytext);
 								push_TS("CADENA_CARACTERES", yytext);
+
 								return CADENA_CARACTERES;
 							} else {
-								printf("ERROR - String muy largo. Maximo 30 caracteres. String: %s\n", yytext);
-								exit(3);
+								printf("\nCADENA CARATERES: %s\n", yytext);
+								char otherString[33];
+								strncpy(otherString, yytext, 31);
+								otherString[31] = '\"';
+								otherString[32] = '\0';
+								push_TS("CADENA_CARACTERES", otherString);
+
+								return CADENA_CARACTERES;
 							}
 						}
 {ID}       				{printf("\nID: %s\n", yytext); push_TS("ID", yytext); return ID;}
