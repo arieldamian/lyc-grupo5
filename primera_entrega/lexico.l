@@ -135,7 +135,7 @@ SIMB_PUNTO_COMA		";"
 "\n\t"
 " "             		
 "\r\n"
-.						printf( "ERROR LEXICO : Caracter no reconocido: %s\n", yytext );
+.						{printf( "ERROR LEXICO : Caracter no reconocido: %s\n", yytext ); exit(18);}
 
 
 %%
