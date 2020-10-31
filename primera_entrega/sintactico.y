@@ -122,7 +122,9 @@ opcondicion:
 
 condicion:
   expresion {printf("expresion es CONDICION\n");}
+  | OP_NOT expresion {printf("OP_NOT expresion es CONDICION\n");}
   | condicion opcondicion expresion {printf("condicion OPCONDICION expresion es CONDICION\n");}
+  | OP_NOT PAR_ABRE condicion opcondicion expresion PAR_CIERRA {printf("OP_NOT PAR_ABRE condicion opcondicion expresion PAR_CIERRA es CONDICION\n");}
   ;
 
 else:
