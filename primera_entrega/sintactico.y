@@ -35,6 +35,8 @@ FILE  *yyin;
 %token OP_MAYOR
 %token OP_DIV
 %token OP_MULT
+%token OP_OR
+%token OP_NOT
 %token PAR_ABRE
 %token PAR_CIERRA
 %token COR_ABRE
@@ -112,10 +114,15 @@ expresion:
   | ID OP_MENOR factor {printf("ID < factor es EXPRESION \n");}
   | ID OP_DISTINTO factor {printf("ID <> factor es EXPRESION \n");}
   ;
-   
+
+opcondicion:
+  AND {printf("AND es op-condicion\n");}
+  | OP_OR {printf("OP_OR es op-condicion\n");}
+  ;
+
 condicion:
   expresion {printf("expresion es CONDICION\n");}
-  | condicion AND expresion {printf("condicion AND expresion es CONDICION\n");}
+  | condicion opcondicion expresion {printf("condicion OPCONDICION expresion es CONDICION\n");}
   ;
 
 else:
@@ -139,7 +146,6 @@ lectura:
 
 %%
 
-
 int main(int argc, char *argv[])
 {
     if((yyin = fopen(argv[1], "rt"))==NULL)
@@ -159,5 +165,5 @@ int main(int argc, char *argv[])
 int yyerror(void)
      {
        printf("Error Sintactico\n");
-	 exit (1);
+	     exit (1);
      }
