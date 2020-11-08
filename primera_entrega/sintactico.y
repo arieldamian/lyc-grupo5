@@ -1,14 +1,64 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "y.tab.h"
-int yystopparser=0;
-FILE  *yyin;
 
+#define CARACTER_NOMBRE "_"
+#define NO_ENCONTRADO -1
+#define SIN_ASIGNAR "SinAsignar"
+#define TRUE 1
+#define FALSE 0
+#define ERROR -1
+#define OK 3
+
+  enum valorMaximo{
+    ENTERO_MAXIMO = 32768,
+    CADENA_MAXIMA = 31,
+    TAM = 100
+  };
+
+  //Polaca
+	typedef struct
+	{
+		char cadena[CADENA_MAXIMA];
+		int nro;
+	}t_infoPolaca;
+
+	typedef struct s_nodoPolaca{
+    	t_infoPolaca info;
+    	struct s_nodoPolaca* psig;
+	}t_nodoPolaca;
+
+	typedef t_nodoPolaca *t_polaca;
+
+	///////////////////// DECLARACION DE FUNCIONES /////////////////////
   int yyerror();
   int yylex();
 
+	//Funciones para notacion intermedia
+	void guardarPolaca(t_polaca*);
+	int ponerEnPolacaNro(t_polaca*,int, char *);
+	int ponerEnPolaca(t_polaca*, char *);
+	void crearPolaca(t_polaca*);
+
+  /////////////// VARIABLES //////////////////
+  int yystopparser=0;
+  FILE  *yyin;
+  char *yyltext;
+	char *yytext;
+
+  int contadorPolaca=0;
+  t_polaca polaca;
+
 %}
+
+%union {
+	char * int_val;
+	char * real_val;
+	char * str_val;
+	char * cmp_val;
+}
 
 %token DIM
 %token FLOAT
@@ -22,10 +72,10 @@ FILE  *yyin;
 %token AS
 %token AND
 %token CONTAR
-%token CTE_ENTERA
-%token CTE_REAL
-%token CADENA_CARACTERES
-%token ID
+%token <int_val>CTE_ENTERA
+%token <real_val>CTE_REAL
+%token <str_val>CADENA_CARACTERES
+%token <str_val>ID
 %token OP_IGUAL
 %token OP_ASIG
 %token OP_SUMA
@@ -103,7 +153,19 @@ declaracion:
   ;
 
 asignacion:
-  CONST ID OP_IGUAL CTE_ENTERA SIMB_PUNTO_COMA {printf("CONST ID = CTE_ENTERA; es ASIGNACION\n");}
+  CONST ID {
+    ponerEnPolaca(&polaca, yylval.str_val);
+  } 
+  OP_IGUAL {
+    // insertar en una pila op_igual
+    ponerEnPolaca(&polaca, yylval.str_val);
+  }
+  CTE_ENTERA {
+    ponerEnPolaca(&polaca, yylval.int_val);
+  } SIMB_PUNTO_COMA {
+    // Desapilar el tope de pila e insertar en polaca
+    printf("CONST ID = CTE_ENTERA; es ASIGNACION\n");
+  }
   | ID OP_ASIG CTE_ENTERA SIMB_PUNTO_COMA {printf("ID: CTE_ENTERA; es ASIGNACION\n");}
   | ID OP_ASIG termino OP_SUMA termino SIMB_PUNTO_COMA  {printf("ID: termino + termino; es ASIGNACION\n");}
   ;
@@ -148,24 +210,102 @@ lectura:
 
 %%
 
-int main(int argc, char *argv[])
-{
-    if((yyin = fopen(argv[1], "rt"))==NULL)
-    {
-        printf("\nNo se puede abrir el archivo de prueba: %s\n", argv[1]);
-       
-    }
-    else
-    { 
-        
-        yyparse();
-        
-    }
-	fclose(yyin);
-        return 0;
+int main(int argc, char *argv[]) {
+  crearPolaca(&polaca);
+
+  if((yyin = fopen(argv[1], "rt"))==NULL) {
+    printf("\nNo se puede abrir el archivo de prueba: %s\n", argv[1]);     
+  } else {     
+    yyparse();    
+  }
+  fclose(yyin);
+
+  guardarPolaca(&polaca);
+  printf("\n* COMPILACION EXITOSA *\n");
+  return 0;
 }
-int yyerror(void)
-     {
-       printf("Error Sintactico\n");
-	     exit (1);
-     }
+
+int yyerror(void) {
+  printf("Error Sintactico\n");
+  exit (1);
+}
+
+/////////////////POLACA/////////////////////////////////////////////////////
+	void crearPolaca(t_polaca* pp) {
+	    *pp=NULL;
+	}
+
+	char * sacarDePolaca(t_polaca * pp) {
+		t_nodoPolaca* nodo;
+		t_nodoPolaca* anterior;
+		char * cadena = (char*)malloc(sizeof(char)*CADENA_MAXIMA);;
+		nodo = *pp;
+
+		while(nodo->psig){
+			anterior = nodo;
+			nodo = nodo->psig;
+		}
+
+		anterior->psig=NULL;
+		strcpy(cadena, nodo->info.cadena);
+		free(nodo);
+		return cadena;
+	}
+
+	int ponerEnPolaca(t_polaca* pp, char *cadena) {
+	    t_nodoPolaca* pn = (t_nodoPolaca*)malloc(sizeof(t_nodoPolaca));
+	    if(!pn){
+	    	printf("ponerEnPolaca: Error al solicitar memoria (pn).\n");
+	        return ERROR;
+	    }
+	    t_nodoPolaca* aux;
+	    strcpy(pn->info.cadena,cadena);
+	    pn->info.nro=contadorPolaca++;
+	    pn->psig=NULL;
+	    if(!*pp){
+	    	*pp=pn;
+	    	return OK;
+	    }
+	    else{
+	    	aux=*pp;
+	    	while(aux->psig)
+	        	aux=aux->psig;
+	        aux->psig=pn;
+	    	return OK;
+	    }
+	}
+
+	int ponerEnPolacaNro(t_polaca* pp,int pos, char *cadena) {
+		t_nodoPolaca* aux;
+		aux=*pp;
+	    while(aux!=NULL && aux->info.nro<pos){
+	    	aux=aux->psig;
+	    }
+	    if(aux->info.nro==pos){
+	    	strcpy(aux->info.cadena,cadena);
+	    	return OK;
+	    }
+	    else{
+	    	printf("NO ENCONTRADO\n");
+	    	return ERROR;
+	    }
+	    return ERROR;
+	}
+
+	void guardarPolaca(t_polaca *pp) {
+		FILE*pt=fopen("intermedia.txt","w+");
+		t_nodoPolaca* pn;
+		if(!pt){
+			printf("Error al crear la tabla de simbolos\n");
+			return;
+		}
+		while(*pp)
+	    {
+	        pn=*pp;
+	        fprintf(pt, "%s\n",pn->info.cadena);
+	        *pp=(*pp)->psig;
+	        //TODO: Revisar si este free afecta al funcionamiento del compilador en W7
+	        free(pn);
+	    }
+		fclose(pt);
+	}
