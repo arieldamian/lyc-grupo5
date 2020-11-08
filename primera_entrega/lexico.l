@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "y.tab.h"
+
 #define COTA_INT 2147483647
 #define COTA_FLOAT	3.402823E+38
 #define TODO_OK 1
@@ -24,7 +24,6 @@ int puntero_array = 0;
 struct struct_tablaSimbolos tablaSimbolos[10000];
 
 FILE  *yyin;
-int yylval;
 char *yyltext;
 %}
 
@@ -79,6 +78,7 @@ SIMB_PUNTO_COMA		";"
 {COMENTARIO_DOBLE}	{  }	
 {CTE_ENTERA}       		{
 												printf("\nCTE_ENTERA: %s\n", yytext);
+												yylval.int_val = yytext;
 
 												int num = atoi(yytext); 
 												if(num >= COTA_INT*(-1) && num <= COTA_INT){
@@ -91,6 +91,8 @@ SIMB_PUNTO_COMA		";"
 											}
 {CTE_REAL}         		{
 												printf("\nCTE_REAL: %s\n", yytext);
+												yylval.real_val = yytext;
+
 												double n;
 												n = atof(yytext);
 												
@@ -103,6 +105,8 @@ SIMB_PUNTO_COMA		";"
 												}
 											}
 {CADENA_CARACTERES}		{
+							yylval.str_val = strdup(yytext);
+							
 							int cantCaracteres = strlen(yytext);
 							if(cantCaracteres <= 32) { //Cuenta las commillas tambien
 								printf("\nCADENA CARATERES: %s\n", yytext);
@@ -120,7 +124,7 @@ SIMB_PUNTO_COMA		";"
 								return CADENA_CARACTERES;
 							}
 						}
-{ID}       				{printf("\nID: %s\n", yytext); push_TS("ID", yytext); return ID;}
+{ID}       				{printf("\nID: %s\n", yytext); push_TS("ID", yytext); yylval.str_val = strdup(yytext); return ID;}
 {OP_IGUAL}       		{printf("\nOP_DEC: %s\n", yytext); return OP_IGUAL;}
 {OP_ASIG}       		{printf("\nOP_ASIG: %s\n", yytext); return OP_ASIG;}
 {OP_SUMA}       		{printf("\nOP_SUMA: %s\n", yytext); return OP_SUMA;}
