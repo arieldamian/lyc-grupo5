@@ -1,0 +1,3 @@
+DIM < contador,promedio,actual,suma> AS < Integer,Float,Float,Float>
+CONST nombre=80;
+contador:0;

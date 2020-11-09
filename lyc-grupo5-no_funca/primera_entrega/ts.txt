@@ -1,0 +1,8 @@
+Nombre                        Tipo      Valor     Longitud
+contador                      ID        
+promedio                      ID        
+actual                        ID        
+suma                          ID        
+nombre                        ID        
+_80                           CTE_ENTERA
+_0                            CTE_ENTERA

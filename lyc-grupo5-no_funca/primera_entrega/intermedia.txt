@@ -1,0 +1,3 @@
+nombre
+80
+#igualico1
