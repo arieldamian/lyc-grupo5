@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "y.tab.h"
+#include "pila.h"
 
 #define CARACTER_NOMBRE "_"
 #define NO_ENCONTRADO -1
@@ -21,11 +22,11 @@
   //Polaca
 	typedef struct
 	{
-		char cadena[CADENA_MAXIMA];
+		t_dato* dato;
 		int nro;
-	}t_infoPolaca;
+	} t_infoPolaca;
 
-	typedef struct s_nodoPolaca{
+	typedef struct s_nodoPolaca {
     	t_infoPolaca info;
     	struct s_nodoPolaca* psig;
 	}t_nodoPolaca;
@@ -38,8 +39,7 @@
 
 	//Funciones para notacion intermedia
 	void guardarPolaca(t_polaca*);
-	int ponerEnPolacaNro(t_polaca*,int, char *);
-	int ponerEnPolaca(t_polaca*, char *);
+	int ponerEnPolaca(t_polaca*, t_dato*);
 	void crearPolaca(t_polaca*);
 
   /////////////// VARIABLES //////////////////
@@ -51,6 +51,8 @@
   int contadorPolaca=0;
   t_polaca polaca;
 
+  t_pila pila;
+  t_pila pilaAux;
 %}
 
 %union {
@@ -76,9 +78,9 @@
 %token <real_val>CTE_REAL
 %token <str_val>CADENA_CARACTERES
 %token <str_val>ID
-%token OP_IGUAL
-%token OP_ASIG
-%token OP_SUMA
+%token <cmp_val>OP_IGUAL
+%token <cmp_val>OP_ASIG
+%token <cmp_val>OP_SUMA
 %token OP_DISTINTO
 %token OP_MENORIGUAL
 %token OP_MENOR
@@ -124,9 +126,22 @@ tipo:
   ;
 
 factor: 
-  ID {printf("ID es Factor \n");}
-  | CTE_ENTERA {printf("CTE real es Factor\n");}
-  | CTE_REAL {printf("CTE real es Factor\n");}
+  ID {
+    ponerEnPolaca(&polaca, (t_dato *)yylval.str_val);
+
+    printf("ID es Factor \n");
+  }
+  | CTE_ENTERA {
+
+    ponerEnPolaca(&polaca, (t_dato *)yylval.int_val);
+
+    printf("CTE entera es Factor\n");
+  }
+  | CTE_REAL {
+    ponerEnPolaca(&polaca, (t_dato *)yylval.real_val);
+
+    printf("CTE real es Factor\n");
+  }
   | func_contar {printf("CTE real es Factor\n");}
   ;
 
@@ -154,20 +169,79 @@ declaracion:
 
 asignacion:
   CONST ID {
-    ponerEnPolaca(&polaca, yylval.str_val);
+    ponerEnPolaca(&polaca, (t_dato *)yylval.str_val);
   } 
   OP_IGUAL {
-    // insertar en una pila op_igual
-    ponerEnPolaca(&polaca, yylval.str_val);
+    poner_en_pila(&pila,  (t_dato * )yylval.cmp_val);
   }
   CTE_ENTERA {
-    ponerEnPolaca(&polaca, yylval.int_val);
-  } SIMB_PUNTO_COMA {
+    printf("%s", yylval.int_val);
+
+    ponerEnPolaca(&polaca, (t_dato *)yylval.int_val);
+    //ponerEnPolaca(&polaca, (t_dato *)yylval.int_val);
+  }
+   SIMB_PUNTO_COMA {
     // Desapilar el tope de pila e insertar en polaca
+    printf("SIMB_PUNTO_COMA\n");
+    t_dato tope;
+
+    if (!pila_vacia(&pila)) {
+      sacar_de_pila(&pila,  &tope);
+      ponerEnPolaca(&polaca, &tope);
+    } 
+
+    vaciar_pila(&pila);
+    vaciar_pila(&pilaAux);
+
     printf("CONST ID = CTE_ENTERA; es ASIGNACION\n");
   }
-  | ID OP_ASIG CTE_ENTERA SIMB_PUNTO_COMA {printf("ID: CTE_ENTERA; es ASIGNACION\n");}
-  | ID OP_ASIG termino OP_SUMA termino SIMB_PUNTO_COMA  {printf("ID: termino + termino; es ASIGNACION\n");}
+  | ID {
+    printf("------ari-----%s", yylval.str_val);
+    poner_en_pila(&pilaAux,  (t_dato *)yylval.str_val);
+  }
+  OP_ASIG {
+    printf("------ari-----%s", yylval.cmp_val);
+    poner_en_pila(&pila,  (t_dato *)yylval.cmp_val);
+  }
+  operacion SIMB_PUNTO_COMA {
+    t_dato topeAux;
+
+    printf("operacion pilaAux\n");
+    if (!pila_vacia(&pilaAux)) {
+      sacar_de_pila(&pilaAux, &topeAux);
+      ponerEnPolaca(&polaca, &topeAux);  
+    }
+    
+    printf("operacion pila\n");
+    t_dato tope;
+    if (!pila_vacia(&pila)) {
+      printf("Pila no vacia, a sacar de pila\n");
+      sacar_de_pila(&pila, &tope);
+      printf("sarasa\n");
+      printf("Ahora, a poner en polaca\n");
+      ponerEnPolaca(&polaca, &tope);
+    }
+    vaciar_pila(&pila);
+    vaciar_pila(&pilaAux);
+  } 
+  ;
+
+operacion:
+  termino {
+    printf("termino es operacion \n");
+  }
+  | termino OP_SUMA {
+    poner_en_pila(&pilaAux, (t_dato *) yylval.cmp_val);
+  } termino {
+    t_dato* tope;    
+     if (!pila_vacia(&pilaAux)) {
+       printf("termino OP_SUMA termino\n");
+      sacar_de_pila(&pilaAux, tope);
+      ponerEnPolaca(&polaca, tope);
+    }
+    
+    printf("termino + termino es operacion \n");
+  }
   ;
 
 expresion:
@@ -212,6 +286,8 @@ lectura:
 
 int main(int argc, char *argv[]) {
   crearPolaca(&polaca);
+  crear_pila(&pila);
+  crear_pila(&pilaAux);
 
   if((yyin = fopen(argv[1], "rt"))==NULL) {
     printf("\nNo se puede abrir el archivo de prueba: %s\n", argv[1]);     
@@ -235,7 +311,7 @@ int yyerror(void) {
 	    *pp=NULL;
 	}
 
-	char * sacarDePolaca(t_polaca * pp) {
+	/*char * sacarDePolaca(t_polaca * pp) {
 		t_nodoPolaca* nodo;
 		t_nodoPolaca* anterior;
 		char * cadena = (char*)malloc(sizeof(char)*CADENA_MAXIMA);;
@@ -250,16 +326,16 @@ int yyerror(void) {
 		strcpy(cadena, nodo->info.cadena);
 		free(nodo);
 		return cadena;
-	}
+	}*/
 
-	int ponerEnPolaca(t_polaca* pp, char *cadena) {
+	int ponerEnPolaca(t_polaca* pp, t_dato* dato) {
 	    t_nodoPolaca* pn = (t_nodoPolaca*)malloc(sizeof(t_nodoPolaca));
 	    if(!pn){
 	    	printf("ponerEnPolaca: Error al solicitar memoria (pn).\n");
 	        return ERROR;
 	    }
 	    t_nodoPolaca* aux;
-	    strcpy(pn->info.cadena,cadena);
+	    pn->info.dato = dato;
 	    pn->info.nro=contadorPolaca++;
 	    pn->psig=NULL;
 	    if(!*pp){
@@ -275,24 +351,7 @@ int yyerror(void) {
 	    }
 	}
 
-	int ponerEnPolacaNro(t_polaca* pp,int pos, char *cadena) {
-		t_nodoPolaca* aux;
-		aux=*pp;
-	    while(aux!=NULL && aux->info.nro<pos){
-	    	aux=aux->psig;
-	    }
-	    if(aux->info.nro==pos){
-	    	strcpy(aux->info.cadena,cadena);
-	    	return OK;
-	    }
-	    else{
-	    	printf("NO ENCONTRADO\n");
-	    	return ERROR;
-	    }
-	    return ERROR;
-	}
-
-	void guardarPolaca(t_polaca *pp) {
+void guardarPolaca(t_polaca *pp){
 		FILE*pt=fopen("intermedia.txt","w+");
 		t_nodoPolaca* pn;
 		if(!pt){
@@ -302,10 +361,15 @@ int yyerror(void) {
 		while(*pp)
 	    {
 	        pn=*pp;
-	        fprintf(pt, "%s\n",pn->info.cadena);
+          t_infoPolaca a = pn->info;
+          char  *msg = a.dato;
+          printf("Aca va: %s\n", msg);
+	        fprintf(pt, "%s\n", pn->info.dato);
 	        *pp=(*pp)->psig;
 	        //TODO: Revisar si este free afecta al funcionamiento del compilador en W7
 	        free(pn);
 	    }
 		fclose(pt);
 	}
+
+

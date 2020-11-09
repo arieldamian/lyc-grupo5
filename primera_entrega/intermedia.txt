@@ -1,0 +1,6 @@
+nombre
+80
+=
+0
+contador=
+:

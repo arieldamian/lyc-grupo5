@@ -5,17 +5,4 @@ actual                        ID
 suma                          ID        
 nombre                        ID        
 _80                           CTE_ENTERA
-_"Prueba.txt LyC Tema 4!"     CADENA_CARACTERES
-_"Ingrese un valor entero para a"CADENA_CARACTERES
 _0                            CTE_ENTERA
-_02.5                         CTE_REAL  
-_92                           CTE_ENTERA
-_1                            CTE_ENTERA
-_0.342                        CTE_REAL  
-_256                          CTE_ENTERA
-_52                           CTE_ENTERA
-_4                            CTE_ENTERA
-_"La suma es: "               CADENA_CARACTERES
-_2                            CTE_ENTERA
-_"actual es mayor que 2"      CADENA_CARACTERES
-_"no es mayor que 2"          CADENA_CARACTERES
