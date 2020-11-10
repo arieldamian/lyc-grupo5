@@ -48,3 +48,7 @@
 	t_info* topeDePila(t_pila* pila){
 		return &((*pila)->info);
 	}
+
+	int pilaVacia(t_pila* pp) {
+		return *pp == NULL;	
+	}

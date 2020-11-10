@@ -71,12 +71,6 @@ enum valorMaximo{
 	typedef struct
 	{
 		char *cadena;
-		int cantExpresiones;
-		int salto1;
-		int salto2;
-		int nro;
-		enum and_or andOr;
-		enum tipoDato tipo;
 	}t_info;
 
 	typedef struct s_nodoPila{
@@ -105,6 +99,7 @@ void crear_pila(t_pila * pp,size_t treg);
 	void crearPila(t_pila*);
 	int ponerEnPila(t_pila*,t_info*);
 	t_info* topeDePila(t_pila*);
+	int pilaVacia(t_pila* pp);
 
 
 #endif //NEWPILA_PILA_H

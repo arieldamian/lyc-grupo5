@@ -1,3 +1,20 @@
-DIM < contador,promedio,actual,suma> AS < Integer,Float,Float,Float>
+DIM < contador,promedio,actual,suma> AS < Integer,Float,Float,Float >
 CONST nombre=80;
-contador:0;
+PUT "Prueba.txt LyC Tema 4!";
+PUT "Ingrese un valor entero para actual: ";
+GET actual;
+contador: 0;
+suma: 02.5+nombre;
+while (contador <= 92) {
+contador: contador + 1;
+suma: suma + actual;
+}
+PUT "La suma es: ";
+PUT suma;
+if (actual > 2 and actual <> 0){
+PUT "actual es mayor que 2";
+}
+Else
+{
+PUT "no es mayor que 2";
+}

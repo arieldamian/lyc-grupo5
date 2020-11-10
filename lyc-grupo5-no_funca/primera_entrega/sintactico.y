@@ -17,43 +17,48 @@
 
   //Polaca
 typedef struct
-	{
-		char cadena[50];
-		int nro;
-	}t_infoPolaca;
+{
+	char cadena[50];
+	int nro;
+}t_infoPolaca;
 
-	typedef struct s_nodoPolaca{
-    	t_infoPolaca info;
-    	struct s_nodoPolaca* psig;
-	}t_nodoPolaca;
+typedef struct s_nodoPolaca{
+	t_infoPolaca info;
+	struct s_nodoPolaca* psig;
+}t_nodoPolaca;
 
-	typedef t_nodoPolaca *t_polaca;
+typedef t_nodoPolaca *t_polaca;
 
 
-	///////////////////// DECLARACION DE FUNCIONES /////////////////////
-  int yyerror();
-  int yylex();
+///////////////////// DECLARACION DE FUNCIONES /////////////////////
+int yyerror();
+int yylex();
 
 	//Funciones para notacion intermedia
 void guardarPolaca(t_polaca*);
-	int ponerEnPolacaNro(t_polaca*,int, char *);
-	int ponerEnPolaca(t_polaca*, char *);
-	void crearPolaca(t_polaca*);
-	char* obtenerSalto(enum tipoSalto);
-	char* obtenerSalto2(char*,enum tipoSalto);
+int ponerEnPolacaNro(t_polaca*,int, char *);
+int ponerEnPolaca(t_polaca*, char *);
+void crearPolaca(t_polaca*);
+char* obtenerSalto(enum tipoSalto);
+char* obtenerSalto2(char*,enum tipoSalto);
+char* itoa(int val);
+/////////////// VARIABLES //////////////////
+int yystopparser=0;
+FILE  *yyin;
+char *yyltext;
+char *yytext;
 
-  /////////////// VARIABLES //////////////////
-  int yystopparser=0;
-  FILE  *yyin;
-  char *yyltext;
-	char *yytext;
+int contadorPolaca=0;
+t_polaca polaca;
 
-  int contadorPolaca=0;
-  t_polaca polaca;
-
-  t_pila pila;
-  t_pila pilaAux;
-  char ultimoComparador[3];
+t_pila pila;
+t_pila pilaAux;
+t_pila pilaTerminales;
+t_pila pilaCond;
+  
+int asigSuma = 0;
+int isWhile = 0;
+int isIf = 0;
 %}
 
 %union {
@@ -128,15 +133,42 @@ tipo:
 
 factor: 
   ID {
+	if (isWhile && !asigSuma) {
+		ponerEnPolaca(&polaca, yylval.str_val);
+	} else {
+		t_info info;
+		info.cadena=(char*)malloc(sizeof(char)*CADENA_MAXIMA);
+		strcpy(info.cadena, yylval.str_val);
+		ponerEnPila(&pilaTerminales,  &info);
+	}
+
     printf("ID es Factor \n");
   }
   | CTE_ENTERA {
+	if (isIf) {
+		ponerEnPolaca(&polaca, yylval.int_val);
+		isIf = 0;
+	} else if (isWhile) {
+		ponerEnPolaca(&polaca, yylval.int_val);
+		isWhile = 0;
+	} else {
+		t_info info;
+		info.cadena=(char*)malloc(sizeof(char)*CADENA_MAXIMA);
+		strcpy(info.cadena, yylval.int_val);
+		ponerEnPila(&pilaTerminales,  &info);
+	}
+
     printf("CTE entera es Factor\n");
   }
   | CTE_REAL {
+    t_info info;
+	info.cadena=(char*)malloc(sizeof(char)*CADENA_MAXIMA);
+	strcpy(info.cadena, yylval.real_val);
+    ponerEnPila(&pilaTerminales,  &info);
+
     printf("CTE real es Factor\n");
   }
-  | func_contar {printf("CTE real es Factor\n");}
+  | func_contar {printf("func CONTAR es Factor\n");}
   ;
 
 func_contar:
@@ -167,38 +199,105 @@ asignacion:
   } 
   OP_IGUAL {
     t_info info;
-		info.cadena=(char*)malloc(sizeof(char)*CADENA_MAXIMA);
-		info.nro=1;//aca va un contador que no sé si lo vamos a utilizar.. yo le puse 1 porque hay que declarar contadorIgual = 0;
-    sprintf(info.cadena,"#igualico%d",info.nro);
+	info.cadena=(char*)malloc(sizeof(char)*CADENA_MAXIMA);
+	strcpy(info.cadena, yylval.cmp_val);
     ponerEnPila(&pila,  &info);
   }
   CTE_ENTERA {
     ponerEnPolaca(&polaca, yylval.int_val);
   }
    SIMB_PUNTO_COMA {
-      char aux[20];
-		  sprintf(aux,"%s",sacarDePila(&pila)->cadena);
-		  ponerEnPolaca(&polaca,aux);
+    t_info* info = sacarDePila(&pila);
+	ponerEnPolaca(&polaca,info->cadena);
   }
   | ID {
+	t_info info;
+	info.cadena=(char*)malloc(sizeof(char)*CADENA_MAXIMA);
+	strcpy(info.cadena, yylval.str_val);
+	ponerEnPila(&pila,  &info);
   }
   OP_ASIG {
+	t_info info;
+	info.cadena=(char*)malloc(sizeof(char)*CADENA_MAXIMA);
+	strcpy(info.cadena, yylval.cmp_val);
+	ponerEnPila(&pilaAux,  &info);
   }
   operacion SIMB_PUNTO_COMA {
-  } 
+	if(asigSuma) {
+		t_info* info = sacarDePila(&pilaTerminales);
+		ponerEnPolaca(&polaca,info->cadena);
+		info = sacarDePila(&pilaTerminales);
+		ponerEnPolaca(&polaca,info->cadena);
+		info = sacarDePila(&pila);
+		ponerEnPolaca(&polaca,info->cadena);
+		info = sacarDePila(&pila);
+		ponerEnPolaca(&polaca,info->cadena);
+		info = sacarDePila(&pilaAux);
+		ponerEnPolaca(&polaca,info->cadena);
+	} else {
+		t_info* info = sacarDePila(&pila);
+		ponerEnPolaca(&polaca,info->cadena);
+		info = sacarDePila(&pilaTerminales);
+		ponerEnPolaca(&polaca,info->cadena);
+		info = sacarDePila(&pilaAux);
+		ponerEnPolaca(&polaca,info->cadena);
+	}
+	
+	printf("ID : operacion es ASIGNACION \n");
+  }
   ;
 
 operacion:
   termino {
+	asigSuma = 0;	  
   }
   | termino OP_SUMA {
-  } termino {
-    }
+	asigSuma = 1;
+    t_info info;
+	info.cadena=(char*)malloc(sizeof(char)*CADENA_MAXIMA);
+	strcpy(info.cadena, yylval.cmp_val);
+	ponerEnPila(&pila,  &info);
+  } termino
   ;
 
 expresion:
-  ID OP_MENORIGUAL factor {printf("ID <= factor es EXPRESION \n");}
-  | ID OP_MAYOR factor {printf("ID > factor es EXPRESION \n");}
+  ID {
+	  ponerEnPolaca(&polaca, yylval.str_val);
+  } OP_MENORIGUAL {
+	  t_info info;
+	  info.cadena=(char*)malloc(sizeof(char)*CADENA_MAXIMA);
+	  strcpy(info.cadena, "BGT");
+	  ponerEnPila(&pilaAux, &info);
+	  t_info info2;
+	  info2.cadena=(char*)malloc(sizeof(char)*CADENA_MAXIMA);
+	  strcpy(info2.cadena, "CMP");
+	  ponerEnPila(&pilaAux, &info2);
+  } factor {
+	t_info* info = sacarDePila(&pilaAux);
+	ponerEnPolaca(&polaca,info->cadena);
+	info = sacarDePila(&pilaAux);
+	ponerEnPolaca(&polaca,info->cadena);
+	printf("ID <= factor es EXPRESION \n");
+  }
+  | ID {
+	ponerEnPolaca(&polaca, yylval.str_val);
+  } OP_MAYOR {
+	t_info info;
+	info.cadena=(char*)malloc(sizeof(char)*CADENA_MAXIMA);
+	strcpy(info.cadena, "BLE");
+	ponerEnPila(&pilaAux, &info);
+
+	t_info info2;
+	info2.cadena=(char*)malloc(sizeof(char)*CADENA_MAXIMA);
+	strcpy(info2.cadena, "CMP");
+	ponerEnPila(&pilaAux, &info2);
+  } factor {
+	t_info* info = sacarDePila(&pilaAux);
+	ponerEnPolaca(&polaca,info->cadena);
+	info = sacarDePila(&pilaAux);
+	ponerEnPolaca(&polaca,info->cadena);
+	printf("ID > factor es EXPRESION \n");
+  }
   | ID OP_MENOR factor {printf("ID < factor es EXPRESION \n");}
   | ID OP_DISTINTO factor {printf("ID <> factor es EXPRESION \n");}
   ;
@@ -220,18 +319,68 @@ else:
   ;
 
 condicional:
-  WHILE PAR_ABRE condicion PAR_CIERRA LLAVE_ABRE sentencias LLAVE_CIERRA {printf("WHILE (CONDICION) {SENTENCIAS} es CONDICIONAL\n");}
-  | IF PAR_ABRE condicion PAR_CIERRA LLAVE_ABRE sentencia LLAVE_CIERRA else  {printf("IF (CONDICION) {SENTENCIAS} ELSE es CONDICIONAL\n");}
-  | IF PAR_ABRE condicion PAR_CIERRA sentencia {printf("IF (CONDICION) SENTENCIAS es CONDICIONAL\n");}
+  WHILE {
+	t_info info;
+	info.cadena=(char*)malloc(sizeof(char)*CADENA_MAXIMA);
+	strcpy(info.cadena, itoa(contadorPolaca));
+	ponerEnPila(&pilaCond,  &info);
+	ponerEnPolaca(&polaca, "ET");
+	isWhile = 1;
+  } PAR_ABRE condicion {
+	t_info info;
+	info.cadena=(char*)malloc(sizeof(char)*CADENA_MAXIMA);
+	strcpy(info.cadena, itoa(contadorPolaca));
+	ponerEnPila(&pilaCond,  &info);
+	ponerEnPolaca(&polaca, "");
+  } PAR_CIERRA LLAVE_ABRE sentencias LLAVE_CIERRA {
+	  ponerEnPolaca(&polaca, "BI");
+	  t_info* info = sacarDePila(&pilaCond);
+	  ponerEnPolacaNro(&polaca, atoi(info->cadena), itoa(contadorPolaca+1));
+	  info = sacarDePila(&pilaCond);
+	  ponerEnPolaca(&polaca, info->cadena);
+	  isWhile = 0;
+	  printf("WHILE (CONDICION) {SENTENCIAS} es CONDICIONAL\n");
+	}
+  | IF {
+	isIf = 1;
+  } PAR_ABRE condicion {
+	t_info info;
+	info.cadena=(char*)malloc(sizeof(char)*CADENA_MAXIMA);
+	strcpy(info.cadena, itoa(contadorPolaca));
+	ponerEnPila(&pilaCond,  &info);
+  } PAR_CIERRA LLAVE_ABRE sentencia LLAVE_CIERRA {
+	ponerEnPolaca(&polaca, "BI");
+	t_info* info = sacarDePila(&pilaCond);
+	ponerEnPolacaNro(&polaca, atoi(info->cadena), itoa(contadorPolaca+1));
+	
+	t_info info2;
+	info2.cadena=(char*)malloc(sizeof(char)*CADENA_MAXIMA);
+	strcpy(info2.cadena, itoa(contadorPolaca));
+	ponerEnPila(&pilaCond,  &info2);
+	ponerEnPolaca(&polaca, "");
+  } else {
+	t_info* info = sacarDePila(&pilaCond);
+	ponerEnPolacaNro(&polaca, atoi(info->cadena), itoa(contadorPolaca+1));
+	printf("IF (CONDICION) {SENTENCIAS} ELSE es CONDICIONAL\n");
+  }
   ;
 
 escritura:
-  PUT CADENA_CARACTERES SIMB_PUNTO_COMA {printf("PUT STRING; es ESCRITURA\n");}
-  | PUT ID SIMB_PUNTO_COMA {printf("PUT ID; es ESCRITURA\n");}
+  PUT CADENA_CARACTERES SIMB_PUNTO_COMA {
+	ponerEnPolaca(&polaca, "PUT");
+	printf("PUT STRING; es ESCRITURA\n");
+  }
+  | PUT ID SIMB_PUNTO_COMA {
+	ponerEnPolaca(&polaca, "PUT");
+	printf("PUT ID; es ESCRITURA\n");
+  }
   ;
 
 lectura:
-  GET ID SIMB_PUNTO_COMA {printf("GET ID; es LECTURA\n");}
+  GET ID SIMB_PUNTO_COMA {
+  	ponerEnPolaca(&polaca, "GET");
+  	printf("GET ID; es LECTURA\n");	  
+  }
   ;
 
 %%
@@ -240,6 +389,8 @@ int main(int argc, char *argv[]) {
   crearPolaca(&polaca);
   crearPila(&pila);
   crearPila(&pilaAux);
+  crearPila(&pilaTerminales);
+  crearPila(&pilaCond);
 
   if((yyin = fopen(argv[1], "rt"))==NULL) {
     printf("\nNo se puede abrir el archivo de prueba: %s\n", argv[1]);     
@@ -259,152 +410,100 @@ int yyerror(void) {
 }
 
 /////////////////POLACA/////////////////////////////////////////////////////
-	void crearPolaca(t_polaca* pp)
-	{
-	    *pp=NULL;
+void crearPolaca(t_polaca* pp)
+{
+	*pp=NULL;
+}
+
+char * sacarDePolaca(t_polaca * pp){
+	t_nodoPolaca* nodo;
+	t_nodoPolaca* anterior;
+	char * cadena = (char*)malloc(sizeof(char)*CADENA_MAXIMA);;
+	nodo = *pp;
+
+	while(nodo->psig){
+		anterior = nodo;
+		nodo = nodo->psig;
 	}
 
-	char * sacarDePolaca(t_polaca * pp){
-		t_nodoPolaca* nodo;
-		t_nodoPolaca* anterior;
-		char * cadena = (char*)malloc(sizeof(char)*CADENA_MAXIMA);;
-		nodo = *pp;
+	anterior->psig=NULL;
+	strcpy(cadena, nodo->info.cadena);
+	free(nodo);
+	return cadena;
+}
 
-		while(nodo->psig){
-			anterior = nodo;
-			nodo = nodo->psig;
-		}
-
-		anterior->psig=NULL;
-		strcpy(cadena, nodo->info.cadena);
-		free(nodo);
-		return cadena;
+int ponerEnPolaca(t_polaca* pp, char *cadena)
+{
+	t_nodoPolaca* pn = (t_nodoPolaca*)malloc(sizeof(t_nodoPolaca));
+	if(!pn){
+		printf("ponerEnPolaca: Error al solicitar memoria (pn).\n");
+		return ERROR;
 	}
-
-	int ponerEnPolaca(t_polaca* pp, char *cadena)
-	{
-	    t_nodoPolaca* pn = (t_nodoPolaca*)malloc(sizeof(t_nodoPolaca));
-	    if(!pn){
-	    	printf("ponerEnPolaca: Error al solicitar memoria (pn).\n");
-	        return ERROR;
-	    }
-	    t_nodoPolaca* aux;
-	    strcpy(pn->info.cadena,cadena);
-	    pn->info.nro=contadorPolaca++;
-	    pn->psig=NULL;
-	    if(!*pp){
-	    	*pp=pn;
-	    	return OK;
-	    }
-	    else{
-	    	aux=*pp;
-	    	while(aux->psig)
-	        	aux=aux->psig;
-	        aux->psig=pn;
-	    	return OK;
-	    }
+	t_nodoPolaca* aux;
+	strcpy(pn->info.cadena,cadena);
+	pn->info.nro=contadorPolaca++;
+	pn->psig=NULL;
+	if(!*pp){
+		*pp=pn;
+		return OK;
 	}
-
-	int ponerEnPolacaNro(t_polaca* pp,int pos, char *cadena)
-	{
-		t_nodoPolaca* aux;
+	else{
 		aux=*pp;
-	    while(aux!=NULL && aux->info.nro<pos){
-	    	aux=aux->psig;
-	    }
-	    if(aux->info.nro==pos){
-	    	strcpy(aux->info.cadena,cadena);
-	    	return OK;
-	    }
-	    else{
-	    	printf("NO ENCONTRADO\n");
-	    	return ERROR;
-	    }
-	    return ERROR;
+		while(aux->psig)
+			aux=aux->psig;
+		aux->psig=pn;
+		return OK;
 	}
+}
 
-	void guardarPolaca(t_polaca *pp){
-		FILE*pt=fopen("intermedia.txt","w+");
-		t_nodoPolaca* pn;
-		if(!pt){
-			printf("Error al crear la tabla de simbolos\n");
-			return;
-		}
-		while(*pp)
-	    {
-	        pn=*pp;
-	        fprintf(pt, "%s\n",pn->info.cadena);
-	        *pp=(*pp)->psig;
-	        //TODO: Revisar si este free afecta al funcionamiento del compilador en W7
-	        free(pn);
-	    }
-		fclose(pt);
+int ponerEnPolacaNro(t_polaca* pp,int pos, char *cadena)
+{
+	t_nodoPolaca* aux;
+	aux=*pp;
+	while(aux!=NULL && aux->info.nro<pos){
+		aux=aux->psig;
 	}
-
-	char* obtenerSalto(enum tipoSalto tipo){
-		switch(tipo){
-			case normal:
-				if(strcmp(ultimoComparador,"==")==0)
-					return("BEQ");
-				if(strcmp(ultimoComparador,">")==0)
-					return("BGT");
-				if(strcmp(ultimoComparador,"<")==0)
-					return("BLT");
-				if(strcmp(ultimoComparador,">=")==0)
-					return("BGE");
-				if(strcmp(ultimoComparador,"<=")==0)
-					return("BLE");
-				if(strcmp(ultimoComparador,"!=")==0)
-					return("BNE");
-				break;
-
-			case inverso:
-				if(strcmp(ultimoComparador,"==")==0)
-					return("BNE");
-				if(strcmp(ultimoComparador,">")==0)
-					return("BLE");
-				if(strcmp(ultimoComparador,"<")==0)
-					return("BGE");
-				if(strcmp(ultimoComparador,">=")==0)
-					return("BLT");
-				if(strcmp(ultimoComparador,"<=")==0)
-					return("BGT");
-				if(strcmp(ultimoComparador,"!=")==0)
-					return("BEQ");
-				break;
-		}
+	if(aux->info.nro==pos){
+		strcpy(aux->info.cadena,cadena);
+		return OK;
 	}
-
-	char* obtenerSalto2(char* comparador,enum tipoSalto tipo){
-		switch(tipo){
-			case normal:
-				if(strcmp(comparador,"==")==0)
-					return("BEQ");
-				if(strcmp(comparador,">")==0)
-					return("BGT");
-				if(strcmp(comparador,"<")==0)
-					return("BLT");
-				if(strcmp(comparador,">=")==0)
-					return("BGE");
-				if(strcmp(comparador,"<=")==0)
-					return("BLE");
-				if(strcmp(comparador,"!=")==0)
-					return("BNE");
-				break;
-
-			case inverso:
-				if(strcmp(comparador,"==")==0)
-					return("BNE");
-				if(strcmp(comparador,">")==0)
-					return("BLE");
-				if(strcmp(comparador,"<")==0)
-					return("BGE");
-				if(strcmp(comparador,">=")==0)
-					return("BLT");
-				if(strcmp(comparador,"<=")==0)
-					return("BGT");
-				if(strcmp(comparador,"!=")==0)
-					return("BEQ");
-				break;
-		}
+	else{
+		printf("NO ENCONTRADO\n");
+		return ERROR;
 	}
+	return ERROR;
+}
+
+void guardarPolaca(t_polaca *pp){
+	FILE*pt=fopen("intermedia.txt","w+");
+	t_nodoPolaca* pn;
+	if(!pt){
+		printf("Error al crear la tabla de simbolos\n");
+		return;
+	}
+	int i = 0;
+	while(*pp)
+	{
+		pn=*pp;
+		fprintf(pt, "CELDA %d: %s\n",i, pn->info.cadena);
+		i++;
+		*pp=(*pp)->psig;
+		//TODO: Revisar si este free afecta al funcionamiento del compilador en W7
+		free(pn);
+	}
+	fclose(pt);
+}
+
+char* itoa(int val){
+
+	static char buf[32] = {0};
+	
+	int i = 30;
+	
+	for(; val && i ; --i, val /= 10)
+	
+		buf[i] = "0123456789abcdef"[val % 10];
+	
+	return &buf[i+1];
+	
+}
