@@ -112,7 +112,7 @@ int isOperacion = 0;
 program:
 	sentencias {
 		mostrarTablaSimbolos();
-		// tsCrearArchivo();
+		tsCrearArchivo();
 		generarAssembler();
 		printf("\n--------------FIN PROGRAMA--------------\n");
 	}

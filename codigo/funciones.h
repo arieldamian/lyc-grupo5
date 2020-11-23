@@ -10,9 +10,9 @@
 #define T_ID 4
 
 typedef struct {
-	char nombre[100];
+	char nombre[50];
 	int tipo;
-	char dato[100];
+	char dato[50];
 	int longitud;
 } t_simbolo;
 

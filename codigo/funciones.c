@@ -41,7 +41,7 @@ int tsCrearArchivo() {
 	}
 
 	// Cabecera del archivo
-	fprintf(archivo, "%-32s%-13s%-31s%-12s\n", "Nombre", "Tipo", "Valor", "Longitud");
+	fprintf(archivo, "%-32s%-13s%-32s%-12s\n", "Nombre", "Tipo", "Valor", "Longitud");
 
 	// Se escribe linea por linea
 	for (i = 0; i < posActualTablaSimbolos; i++) {
@@ -51,7 +51,7 @@ int tsCrearArchivo() {
 		) {
 			fprintf(archivo, "%-32s%-13s\n", tablaSimbolos[i].nombre, obtenerNombreTipo(tablaSimbolos[i].tipo));
 		} else {
-			fprintf(archivo, "%-32s%-13s%-31s%-12s\n",
+			fprintf(archivo, "%-32s%-13s%-32s%-12d\n",
 			indicarNombreConstante(tablaSimbolos[i].nombre), obtenerNombreTipo(tablaSimbolos[i].tipo), tablaSimbolos[i].dato, tablaSimbolos[i].longitud);
 		}
 	}
@@ -100,10 +100,12 @@ void generarAssembler() {
 		exit(1);
 	}
 
+    /*
   if (ensamblar()) {
 		printf("Error al ensamblar el archivo final\n");
 		exit(1);
   }
+  */
 }
 
 int generarHeader() {
