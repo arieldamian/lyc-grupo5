@@ -321,14 +321,18 @@ asignacion:
 			t_info* info = sacarDePila(&pilaTerminales);
 			ponerEnPolaca(&polaca,info->cadena);
 		}
+
 		while(!pilaVacia(&pila)){
 			t_info* info = sacarDePila(&pila);
 			ponerEnPolaca(&polaca,info->cadena);
 		}
+
 		while(!pilaVacia(&pilaAux)){
 			t_info* info = sacarDePila(&pilaAux);
 			ponerEnPolaca(&polaca,info->cadena);
 		}
+
+		asigSuma = 0;
 	} else {
 		if(!pilaVacia(&pila)){
 			t_info* info = sacarDePila(&pila);
@@ -358,9 +362,7 @@ operacion:
 	info.cadena=(char*)malloc(sizeof(char)*CADENA_MAXIMA);
 	strcpy(info.cadena, yylval.cmp_val);
 	ponerEnPila(&pila,  &info);
-  } termino {
-	  asigSuma = 0;
-  }
+  } termino
   ;
 
 expresion:
@@ -528,19 +530,25 @@ condicional:
   ;
 
 escritura:
-  PUT CADENA_CARACTERES SIMB_PUNTO_COMA {
-	ponerEnPolaca(&polaca, "PUT");
-	printf("PUT STRING; es ESCRITURA\n");
+  PUT CADENA_CARACTERES {
+		ponerEnPolaca(&polaca, "PUT");
+		ponerEnPolaca(&polaca, yylval.str_val);
+	} SIMB_PUNTO_COMA {
+		printf("PUT STRING; es ESCRITURA\n");
   }
-  | PUT ID SIMB_PUNTO_COMA {
-	ponerEnPolaca(&polaca, "PUT");
-	printf("PUT ID; es ESCRITURA\n");
+  | PUT ID {
+		ponerEnPolaca(&polaca, "PUT");
+		ponerEnPolaca(&polaca, yylval.str_val);
+	} SIMB_PUNTO_COMA {
+		printf("PUT ID; es ESCRITURA\n");
   }
   ;
 
 lectura:
-  GET ID SIMB_PUNTO_COMA {
-  	ponerEnPolaca(&polaca, "GET");
+  GET ID {
+		ponerEnPolaca(&polaca, "GET");
+		ponerEnPolaca(&polaca, yylval.str_val);
+	} SIMB_PUNTO_COMA {
   	printf("GET ID; es LECTURA\n");	  
   }
   ;
@@ -636,7 +644,7 @@ int ponerEnPolacaNro(t_polaca* pp,int pos, char *cadena)
 	return ERROR;
 }
 
-void guardarPolaca(t_polaca *pp){
+void guardarPolaca(t_polaca *pp) {
 	FILE*pt=fopen("intermedia.txt","w+");
 	t_nodoPolaca* pn;
 	if(!pt){
@@ -647,7 +655,7 @@ void guardarPolaca(t_polaca *pp){
 	while(*pp)
 	{
 		pn=*pp;
-		fprintf(pt, "CELDA %d: %s\n",i, pn->info.cadena);
+		fprintf(pt, "%s\n", pn->info.cadena);
 		i++;
 		*pp=(*pp)->psig;
 		//TODO: Revisar si este free afecta al funcionamiento del compilador en W7
