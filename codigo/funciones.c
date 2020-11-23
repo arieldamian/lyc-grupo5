@@ -3,6 +3,30 @@
 t_simbolo tablaSimbolos[100];
 int posActualTablaSimbolos = 0;
 
+char polaquita [200][50];
+int contadorPolaquita = 0;
+
+int numeroAuxiliar = 0;
+
+char etiqueta[20];
+int numeroEtiqueta = 1;
+int esPosicion = 0;
+int posicion = -1;
+int esEscritura = 0;
+int esLectura = 0;
+
+// t_pila_retorno pilaPosicionRetornoCondicional[50];
+int pilaPosicionRetornoCondicional[50];
+int posActualPilaRetornoCondicional = 0;
+
+int pilaPosiciones[100];
+int posActualPilaPosiciones = 0;
+
+char * pilaOperandos[100];
+int posActualPilaOperandos = 0;
+
+int flagWhile = 0;
+
 // START TABLA DE SIMBOLOS
 void insertarTablaSimbolos(char * nombre, int tipo, char * dato, int longitud) {
     int i;
@@ -29,6 +53,30 @@ char * indicarNombreConstante(const char * valor) {
 	char nombre[100] = "_";
 	strcat(nombre, valor);
 	return strdup(nombre);
+}
+
+int chuparPolaca() {
+    // levanta polaca
+    FILE * archivo;
+    archivo = fopen("intermedia.txt", "rt");
+
+    printf("Funca la polaquita1\n");
+
+    if (!archivo) {
+		return 1;
+	}
+
+    while (fgets(polaquita[contadorPolaquita], sizeof(polaquita[contadorPolaquita]), archivo)) {
+      if(!strchr(polaquita[contadorPolaquita],'\n')){
+          printf("Reg. Invalido. \n %s",polaquita[contadorPolaquita]);
+          exit(1);
+      }
+
+      contadorPolaquita++;
+    }
+    fclose(archivo);
+
+    return 0;
 }
 
 int tsCrearArchivo() {
@@ -60,6 +108,18 @@ int tsCrearArchivo() {
 	return 0;
 }
 
+int obtenerTipoDeDato(int posicionPolaquita) {
+  int encontrado = 0;
+  int i = 0;
+
+  // polaquita[posicionPolaquita][0]
+  if (polaquita[posicionPolaquita][0] == '"') {
+    return T_CTE_STRING;
+  } 
+
+  return T_ID;
+}
+
 char * obtenerNombreTipo(const int tipo) {
 	switch(tipo) {
 		case T_CTE_INTEGER:
@@ -76,24 +136,21 @@ char * obtenerNombreTipo(const int tipo) {
 // END TABLA DE SIMBOLOS
 
 // START ASM
-
 void generarAssembler() {
   if (generarHeader()) {
       printf("Error al generar el header\n");
       exit(1);
   }
 
-  
-  if (generarData()) {
-    printf("Error al generar la data\n");
-    exit(1);
-	}
-/*
   if (generarInstrucciones()) {
       printf("Error al generar las instrucciones\n");
       exit(1);
   }
-  */
+
+  if (generarData()) {
+    printf("Error al generar la data\n");
+    exit(1);
+  }
 
   if (generarFooter()) {
 		printf("Error al generar el footer\n");
@@ -155,24 +212,31 @@ int generarData() {
 }
 
 int generarInstrucciones() {
-  /*
     FILE * fp;
+
+    if(chuparPolaca()) {
+        return 1;
+    }
     
     fp = fopen("./assembler/instrucciones", "w");
     if (fp == NULL) {
         return 1;
     }
-
+    
     char * op1;
     char * op2;
     int i;
-    for (i = 0; i < getPosActualPolaca(); i++) {
+    printf("El contador de polaquita es: %d\n", contadorPolaquita);
+    for (i = 0; i < contadorPolaquita; i++) {
         if (i == posicion) {
             posicion = -1;
             fprintf(fp, "%s:\n", etiqueta);
         }
 
-        char * dato = polaca[i].dato;
+        char * dato = polaquita[i];
+        dato[strlen(dato) - 1] = '\0';
+        printf("Vamos a analizar: %s\n", dato);
+        printf("Largo de la cadena %lu\n", strlen(dato));
         if (strcmp(dato, MAS) == 0) {
             op1 = desapilarOperador();
             op2 = desapilarOperador();
@@ -183,7 +247,7 @@ int generarInstrucciones() {
             pedirAux(aux);
             fprintf(fp, "fistp %s\n", aux);
             apilarOperador(aux);
-        } else if (strcmp(dato, IGUAL) == 0) {
+        } else if (strcmp(dato, IGUAL) == 0 || strcmp(dato, IGUAL_2) == 0) {
             op1 = desapilarOperador();
             op2 = desapilarOperador();
             fprintf(fp, "fild %s\n", op2);
@@ -200,6 +264,27 @@ int generarInstrucciones() {
             pedirEtiqueta();
             fprintf(fp, "JNE %s\n", etiqueta);
             esPosicion = 1;
+        } else if (strcmp(dato, SALTO_POR_MAYOR) == 0) {
+            pedirEtiqueta();
+            fprintf(fp, "BGT %s\n", etiqueta);
+            esPosicion = 1;
+        } else if (strcmp(dato, SALTO_IGUAL) == 0) {
+            pedirEtiqueta();
+            fprintf(fp, "BE %s\n", etiqueta);
+            esPosicion = 1;
+        } else if (strcmp(dato, SALTO_POR_MENOR_O_IGUAL) == 0) {
+            pedirEtiqueta();
+            fprintf(fp, "BLE %s\n", etiqueta);
+            esPosicion = 1;
+        } else if (strcmp(dato, SALTO_INCONDICIONAL) == 0) {
+            int numEtiqueta = pilaPosicionRetornoCondicional[--posActualPilaRetornoCondicional];
+            fprintf(fp, "BI etiqueta%d\n", numEtiqueta);
+        } else if (strcmp(dato, SALTO_WHILE) == 0) {
+          // ET
+            pedirEtiqueta();
+            fprintf(fp, "%s:\n", etiqueta);
+            pilaPosicionRetornoCondicional[posActualPilaRetornoCondicional++] = numeroEtiqueta - 1;
+            flagWhile = 1;
         } else if (strcmp(dato, LEER) == 0) {
             esLectura = 1;
         } else if (strcmp(dato, ESCRIBIR) == 0) {
@@ -207,22 +292,29 @@ int generarInstrucciones() {
         } else {
             if(esPosicion) {
                 esPosicion = 0;
-                posicion = atoi(dato);
+                posicion = atoi(dato) - 1;
+
+                // t_pila_retorno aux;
+                // aux.numeroEtiqueta = ;
+                // aux.posicionDeSalto = ;
             } else if(esEscritura) {
                 esEscritura = 0;
-                if(polaca[i].tipoDato == T_CTE_STRING || polaca[i].tipoDato == T_STRING)
+                int indexTipoDato = obtenerTipoDeDato(i);
+                if(indexTipoDato == T_CTE_STRING)
                     fprintf(fp, "DisplayString %s\n", dato);
-                else if(polaca[i].tipoDato == T_CTE_INTEGER || polaca[i].tipoDato == T_INTEGER || polaca[i].tipoDato == T_ID)
+                else if(indexTipoDato == T_ID)
                     fprintf(fp, "DisplayInteger %s\n", dato);
                 fprintf(fp, "newLine 1\n");
             } else if(esLectura) {
                 esLectura = 0;
                 fprintf(fp, "GetInteger %s\n", dato);
             }
+            printf("APLINADO OPERADOR: %s\n", dato);
             apilarOperador(dato);
         }
     }
-    fclose(fp);*/
+    fclose(fp);
+  
     return 0;
 }
 
@@ -264,6 +356,35 @@ int unirArchivo(FILE * fp, char * nombre, char * buffer){
     fclose(file);
     remove(nombre);
     return 0;
+}
+
+void pedirAux(char * aux) {
+    sprintf(aux, "@aux%d", numeroAuxiliar++);
+    insertarTablaSimbolos(aux, T_CTE_INTEGER, "?", 0);
+}
+
+void pedirEtiqueta() {
+    sprintf(etiqueta, "etiqueta%d", numeroEtiqueta++);
+}
+
+int verTopeDePilaPosiciones() {
+	return posActualPilaPosiciones;
+}
+
+void apilarPosicion(int pos) {
+	pilaPosiciones[posActualPilaPosiciones++] = pos;
+} 
+
+int desapilarPosicion() {
+	return pilaPosiciones[--posActualPilaPosiciones];
+}
+
+void apilarOperador(char * op) {
+	pilaOperandos[posActualPilaOperandos++] = op;
+} 
+
+char * desapilarOperador() {
+	return pilaOperandos[--posActualPilaOperandos];
 }
 
 // END ASM
