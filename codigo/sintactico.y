@@ -107,9 +107,10 @@ int isIf = 0;
 
 program:
 	sentencias {
+		mostrarTablaSimbolos();
+		// tsCrearArchivo();
 		generarAssembler();
 		printf("\n--------------FIN PROGRAMA--------------\n");
-		mostrarTablaSimbolos();
 	}
 
 sentencias:
