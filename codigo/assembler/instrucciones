@@ -1,0 +1,40 @@
+fild nombre
+fistp 80
+DisplayString "Prueba.txt LyC Tema 4!"
+newLine 1
+DisplayString "Ingrese un valor entero para actual: "
+newLine 1
+GetInteger actual
+fild contador
+fistp 0
+fild 02.5
+fild nombre
+fadd
+fistp @aux0
+fild @aux0
+fistp suma
+etiqueta1:
+fild 92
+fild contador
+fcom
+fstsw ax
+sahf
+BGT etiqueta2
+fild contador
+fild 1
+fadd
+fistp @aux1
+fild @aux1
+fistp contador
+fild suma
+fild actual
+fadd
+fistp @aux2
+fild @aux2
+fistp suma
+BI etiqueta1
+etiqueta2:
+DisplayString "La suma es: "
+newLine 1
+DisplayInteger suma
+newLine 1
