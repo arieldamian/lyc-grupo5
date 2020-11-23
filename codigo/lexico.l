@@ -132,8 +132,8 @@ SIMB_PUNTO_COMA		";"
 {OP_MENORIGUAL}       	{printf("\nOP_MENORIGUAL: %s\n", yytext); return OP_MENORIGUAL;}
 {OP_MENOR}       		{printf("\nOP_MENOR: %s\n", yytext); return OP_MENOR;}
 {OP_MAYOR}       		{printf("\nOP_MAYOR: %s\n", yytext); return OP_MAYOR;}
-{OP_DIV}       			{printf("\nOP_DIV: %s\n", yytext); return OP_DIV;}
-{OP_MULT}       		{printf("\nOP_MULT: %s\n", yytext); return OP_MULT;}
+{OP_DIV}       			{printf("\nOP_DIV: %s\n", yytext); yylval.cmp_val = strdup(yytext); return OP_DIV;}
+{OP_MULT}       		{printf("\nOP_MULT: %s\n", yytext); yylval.cmp_val = strdup(yytext); return OP_MULT;}
 {PAR_ABRE}       		{printf("\nPAR_ABRE: %s\n", yytext); return PAR_ABRE;}
 {PAR_CIERRA}       		{printf("\nPAR_CIERRA: %s\n", yytext); return PAR_CIERRA;}
 {COR_ABRE}       		{printf("\nCOR_ABRE: %s\n", yytext); return COR_ABRE;}
