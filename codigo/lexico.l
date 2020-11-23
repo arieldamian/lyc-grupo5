@@ -3,25 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include "y.tab.h"
+#include "funciones.h"
 
 #define COTA_INT 2147483647
 #define COTA_FLOAT	3.402823E+38
 #define TODO_OK 1
 #define ERROR 0
-
-struct struct_tablaSimbolos
-{
-	char nombre[100];
-	char tipo[100];
-	char valor[50];
-	char longitud[100];
-};
-
-int push_TS(char*, char*);
-int crear_TS();
-
-int puntero_array = 0;
-struct struct_tablaSimbolos tablaSimbolos[10000];
 
 FILE  *yyin;
 char *yyltext;
@@ -82,7 +69,7 @@ SIMB_PUNTO_COMA		";"
 
 												int num = atoi(yytext); 
 												if(num >= COTA_INT*(-1) && num <= COTA_INT){
-													push_TS("CTE_ENTERA", yytext);
+													insertarTablaSimbolos(indicarNombreConstante(strdup(yytext)), T_CTE_INTEGER, strdup(yytext), 0);
 													return CTE_ENTERA; 
 												}else{
 													printf("ERROR - Int fuera de rango.\n");
@@ -97,7 +84,7 @@ SIMB_PUNTO_COMA		";"
 												n = atof(yytext);
 												
 												if(n >= COTA_FLOAT*(-1) && n <= COTA_FLOAT){
-													push_TS("CTE_REAL", yytext);
+													insertarTablaSimbolos(indicarNombreConstante(strdup(yytext)), T_FLOAT, strdup(yytext), 0);
 													return CTE_REAL; 
 												}else{
 													printf("ERROR - Real fuera de rango.\n");
@@ -110,7 +97,7 @@ SIMB_PUNTO_COMA		";"
 							int cantCaracteres = strlen(yytext);
 							if(cantCaracteres <= 32) { //Cuenta las commillas tambien
 								printf("\nCADENA CARATERES: %s\n", yytext);
-								push_TS("CADENA_CARACTERES", yytext);
+								insertarTablaSimbolos(indicarNombreConstante(yylval.str_val), T_CTE_STRING, strdup(yytext), strlen(yylval.str_val));
 
 								return CADENA_CARACTERES;
 							} else {
@@ -119,12 +106,18 @@ SIMB_PUNTO_COMA		";"
 								strncpy(otherString, yytext, 31);
 								otherString[31] = '\"';
 								otherString[32] = '\0';
-								push_TS("CADENA_CARACTERES", otherString);
+								insertarTablaSimbolos(indicarNombreConstante(otherString), T_CTE_STRING, otherString, strlen(otherString));
 
 								return CADENA_CARACTERES;
 							}
 						}
-{ID}       				{printf("\nID: %s\n", yytext); push_TS("ID", yytext); yylval.str_val = strdup(yytext); return ID;}
+{ID}       	{
+							printf("\nID: %s\n", yytext);
+							yylval.str_val = strdup(yytext);
+							insertarTablaSimbolos(yylval.str_val, T_ID, "?", 0);
+							
+							return ID;
+						}
 {OP_IGUAL}       		{printf("\nOP_DEC: %s\n", yytext); yylval.cmp_val = strdup(yytext); return OP_IGUAL;}
 {OP_ASIG}       		{printf("\nOP_ASIG: %s\n", yytext); yylval.cmp_val = strdup(yytext); return OP_ASIG;}
 {OP_SUMA}       		{printf("\nOP_SUMA: %s\n", yytext); yylval.cmp_val = strdup(yytext); return OP_SUMA;}
@@ -153,51 +146,5 @@ SIMB_PUNTO_COMA		";"
 
 %%
 int yywrap() {
-	crear_TS();
 	return 1;
 }
-
-int push_TS(char* tipo, char* nombre)
-{
-	int i, posicion;
-	
-	for(i = 0; i < puntero_array; i++)
-	{
-		if(strcmp(tablaSimbolos[i].nombre, nombre) == 0)
-		{
-			return i;
-		}
-	}
-	strcpy(tablaSimbolos[puntero_array].tipo, tipo);
-	strcpy(tablaSimbolos[puntero_array].nombre, nombre);
-	posicion = puntero_array;
-	puntero_array++;
-	return posicion;
-}
-
-int crear_TS()
-{
-	FILE *archivo; 
-	int i;
-	archivo = fopen("ts.txt","w"); 
-
-	if (!archivo){	return ERROR; }
-
-	fprintf(archivo, "Nombre                        Tipo      Valor     Longitud\n");
-	
-	for (i = 0; i < puntero_array; i++)
-	{
-		if (strcmp(tablaSimbolos[i].tipo, "ID") == 0 )
-		{  
-			fprintf(archivo,"%-30s%-10s\n", tablaSimbolos[i].nombre, tablaSimbolos[i].tipo);
-		}
-		else
-		{
-			fprintf(archivo,"_%-29s%-10s\n", tablaSimbolos[i].nombre, tablaSimbolos[i].tipo);
-		}
-	}
-	fclose(archivo); 
-
-	return TODO_OK;
-}
-
