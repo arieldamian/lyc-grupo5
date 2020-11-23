@@ -1,118 +1,39 @@
-CELDA 0: nombre
-CELDA 1: 80
-CELDA 2: =
-CELDA 3: PUT
-CELDA 4: PUT
-CELDA 5: GET
-CELDA 6: contador
-CELDA 7: 0
-CELDA 8: :
-CELDA 9: +
-CELDA 10: nombre
-CELDA 11: :
-CELDA 12: ET
-CELDA 13: contador
-CELDA 14: 92
-CELDA 15: CMP
-CELDA 16: BGT
-CELDA 17: 95
-CELDA 18: +
-CELDA 19: 1
-CELDA 20: :
-CELDA 21: contador
-CELDA 22: 0.342
-CELDA 23: /
-CELDA 24: contador
-CELDA 25: @cont
-CELDA 26: 0
-CELDA 27: =
-CELDA 28: actual
-CELDA 29: contador
-CELDA 30: *
-CELDA 31: =
-CELDA 32: @pivot
-CELDA 33: @aux
-CELDA 34: 256
-CELDA 35: =
-CELDA 36: @aux
-CELDA 37: @pivot
-CELDA 38: CMP
-CELDA 39: BNE
-CELDA 40: 44
-CELDA 41: @cont
-CELDA 42: 1
-CELDA 43: =
-CELDA 44: nombre
-CELDA 45: suma
-CELDA 46: *
-CELDA 47: @aux
-CELDA 48: =
-CELDA 49: @aux
-CELDA 50: @pivot
-CELDA 51: CMP
-CELDA 52: BNE
-CELDA 53: 59
-CELDA 54: @cont
-CELDA 55: 1
-CELDA 56: +
-CELDA 57: =
-CELDA 58: @cont
-CELDA 59: @aux
-CELDA 60: 52
-CELDA 61: =
-CELDA 62: @aux
-CELDA 63: @pivot
-CELDA 64: CMP
-CELDA 65: BNE
-CELDA 66: 72
-CELDA 67: @cont
-CELDA 68: 1
-CELDA 69: +
-CELDA 70: =
-CELDA 71: @cont
-CELDA 72: @aux
-CELDA 73: 4
-CELDA 74: =
-CELDA 75: @aux
-CELDA 76: @pivot
-CELDA 77: CMP
-CELDA 78: BNE
-CELDA 79: 85
-CELDA 80: @cont
-CELDA 81: 1
-CELDA 82: +
-CELDA 83: =
-CELDA 84: @cont
-CELDA 85: @cont
-CELDA 86: *
-CELDA 87: +
-CELDA 88: contador
-CELDA 89: :
-CELDA 90: +
-CELDA 91: actual
-CELDA 92: :
-CELDA 93: BI
-CELDA 94: 12
-CELDA 95: PUT
-CELDA 96: PUT
-CELDA 97: actual
-CELDA 98: 2
-CELDA 99: CMP
-CELDA 100: BLE
-CELDA 101: 110
-CELDA 102: actual
-CELDA 103: 0
-CELDA 104: CMP
-CELDA 105: BE
-CELDA 106: 110
-CELDA 107: PUT
-CELDA 108: BI
-CELDA 109: 117
-CELDA 110: actual
-CELDA 111: nombre
-CELDA 112: CMP
-CELDA 113: BGE
-CELDA 114: 117
-CELDA 115: PUT
-CELDA 116: BI
-CELDA 117: 
+nombre
+80
+=
+PUT
+"Prueba.txt LyC Tema 4!"
+PUT
+"Ingrese un valor entero para actual: "
+GET
+actual
+contador
+0
+:
+nombre
+02.5
++
+suma
+:
+ET
+contador
+92
+CMP
+BGT
+35
+1
+contador
++
+contador
+:
+actual
+suma
++
+suma
+:
+BI
+17
+PUT
+"La suma es: "
+PUT
+suma
