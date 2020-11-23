@@ -4,6 +4,7 @@
 #include <string.h>
 #include "y.tab.h"
 #include "pila.h"
+#include "funciones.h"
 
 #define CARACTER_NOMBRE "_"
 #define NO_ENCONTRADO -1
@@ -103,6 +104,13 @@ int isIf = 0;
 %token SIMB_PUNTO_COMA
 
 %%
+
+program:
+	sentencias {
+		generarAssembler();
+		printf("\n--------------FIN PROGRAMA--------------\n");
+		mostrarTablaSimbolos();
+	}
 
 sentencias:
   sentencia
