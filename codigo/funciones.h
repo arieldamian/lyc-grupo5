@@ -18,8 +18,10 @@ typedef struct {
 
 void insertarTablaSimbolos(char *, int, char *, int);
 void mostrarTablaSimbolos();
+int tsCrearArchivo();
 
 char * indicarNombreConstante(const char *);
+char * obtenerNombreTipo(int);
 // END TABLA DE SIMBOLOS
 
 // START ASM

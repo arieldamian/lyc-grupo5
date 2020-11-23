@@ -31,6 +31,48 @@ char * indicarNombreConstante(const char * valor) {
 	return strdup(nombre);
 }
 
+int tsCrearArchivo() {
+	int i;
+	FILE *archivo;
+
+	archivo = fopen("ts.txt", "w");
+	if (!archivo) {
+		return 1;
+	}
+
+	// Cabecera del archivo
+	fprintf(archivo, "%-32s%-13s%-31s%-12s\n", "Nombre", "Tipo", "Valor", "Longitud");
+
+	// Se escribe linea por linea
+	for (i = 0; i < posActualTablaSimbolos; i++) {
+		if (tablaSimbolos[i].tipo == T_CTE_INTEGER || 
+			tablaSimbolos[i].tipo == T_FLOAT ||
+			tablaSimbolos[i].tipo == T_ID
+		) {
+			fprintf(archivo, "%-32s%-13s\n", tablaSimbolos[i].nombre, obtenerNombreTipo(tablaSimbolos[i].tipo));
+		} else {
+			fprintf(archivo, "%-32s%-13s%-31s%-12s\n",
+			indicarNombreConstante(tablaSimbolos[i].nombre), obtenerNombreTipo(tablaSimbolos[i].tipo), tablaSimbolos[i].dato, tablaSimbolos[i].longitud);
+		}
+	}
+	fclose(archivo);
+
+	return 0;
+}
+
+char * obtenerNombreTipo(const int tipo) {
+	switch(tipo) {
+		case T_CTE_INTEGER:
+			return "INTEGER";
+		case T_CTE_STRING:
+			return "STRING";
+		case T_FLOAT:
+			return "FLOAT";
+		case T_ID:
+			return "IDENTIFICADOR";
+	}
+}
+
 // END TABLA DE SIMBOLOS
 
 // START ASM
