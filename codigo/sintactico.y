@@ -179,7 +179,12 @@ factor:
   ;
 
 func_contar:
-  CONTAR {isContar = 1;} PAR_ABRE termino {
+  CONTAR {
+	  isContar = 1;
+	  ponerEnPolaca(&polaca, "@cont");
+	  ponerEnPolaca(&polaca, "0");
+	  ponerEnPolaca(&polaca, "=");
+	} PAR_ABRE termino {
 	ponerEnPolaca(&polaca,"=");
 	ponerEnPolaca(&polaca,"@pivot");
   } SIMB_PUNTO_COMA lista PAR_CIERRA {
