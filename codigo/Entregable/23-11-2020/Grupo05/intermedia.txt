@@ -1,0 +1,39 @@
+nombre
+80
+=
+PUT
+"Prueba.txt LyC Tema 4!"
+PUT
+"Ingrese un valor entero para actual: "
+GET
+actual
+contador
+0
+:
+nombre
+02.5
++
+suma
+:
+ET
+contador
+92
+CMP
+BGT
+35
+1
+contador
++
+contador
+:
+actual
+suma
++
+suma
+:
+BI
+17
+PUT
+"La suma es: "
+PUT
+suma

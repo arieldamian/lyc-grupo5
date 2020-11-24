@@ -1,0 +1,14 @@
+Nombre                          Tipo         Valor                           Longitud    
+contador                        IDENTIFICADOR
+promedio                        IDENTIFICADOR
+actual                          IDENTIFICADOR
+suma                            IDENTIFICADOR
+nombre                          IDENTIFICADOR
+_80                             INTEGER      
+__"Prueba.txt LyC Tema 4!"      STRING       "Prueba.txt LyC Tema 4!"        24          
+__"Ingrese un valor entero para a"STRING       "Ingrese un valor entero para a"32          
+_0                              INTEGER      
+_02.5                           FLOAT        
+_92                             INTEGER      
+_1                              INTEGER      
+__"La suma es: "                STRING       "La suma es: "                  14          
