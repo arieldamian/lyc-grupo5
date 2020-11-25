@@ -37,3 +37,26 @@ PUT
 "La suma es: "
 PUT
 suma
+actual
+2
+CMP
+BLE
+53
+actual
+0
+CMP
+BE
+53
+PUT
+"actual es mayor que 2 y distinto de cero"
+BI
+61
+actual
+nombre
+CMP
+BGE
+61
+PUT
+"no es mayor que 2"
+BI
+

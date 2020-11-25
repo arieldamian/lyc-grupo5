@@ -12,3 +12,6 @@ _02.5                           FLOAT
 _92                             INTEGER      
 _1                              INTEGER      
 __"La suma es: "                STRING       "La suma es: "                  14          
+_2                              INTEGER      
+__"actual es mayor que 2 y distin"STRING       "actual es mayor que 2 y distin"32          
+__"no es mayor que 2"           STRING       "no es mayor que 2"             19          
