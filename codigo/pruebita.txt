@@ -1,0 +1,26 @@
+PILA = 35
+ETIQUETA = 2
+esPosicion= 1
+contCMP = 0
+flagwhile = 1
+PILA_OPERADOR = 
+posActualPilaRetornoCondicional = 0
+
+
+//Codigo //la quedé seguime ari
+etiqueta1:
+fild 92
+fild contador
+fcom
+fstsw ax
+sahf
+
+BGT Etiqueta 2
+fild contador
+fild 1
+fadd
+fistp @aux1
+fild contador
+fistp @aux1
+
+fistp @aux1
