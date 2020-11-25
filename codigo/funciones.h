@@ -15,12 +15,19 @@
 #define CMP "CMP"
 #define SALTO_POR_DISTINTO "JNE"
 #define SALTO_POR_MAYOR "BGT"
+#define SALTO_POR_MAYOR_IGUAL "BGE"
 #define SALTO_POR_MENOR_O_IGUAL "BLE"
 #define SALTO_INCONDICIONAL "BI"
 #define SALTO_IGUAL "BE"
 #define SALTO_WHILE "ET"
 #define LEER "GET"
 #define ESCRIBIR "PUT"
+
+typedef struct {
+	int tag;
+    int position;
+    int isWhile;
+} t_tag;
 
 typedef struct {
 	char nombre[50];
@@ -43,7 +50,7 @@ char * obtenerNombreTipo(int);
 // END TABLA DE SIMBOLOS
 
 // START ASM
-
+int getTag(t_tag ts[],int position,int cant,int isWhile);
 void generarAssembler();
 int generarHeader();
 int generarInstrucciones();

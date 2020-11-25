@@ -14,7 +14,7 @@ int esPosicion = 0;
 int posicion = -1;
 int esEscritura = 0;
 int esLectura = 0;
-
+int pedir = 1;
 // t_pila_retorno pilaPosicionRetornoCondicional[50];
 int pilaPosicionRetornoCondicional[50];
 int posActualPilaRetornoCondicional = 0;
@@ -26,7 +26,8 @@ char * pilaOperandos[100];
 int posActualPilaOperandos = 0;
 
 int flagWhile = 0;
-
+int contCMP = 0;
+int isElse = 0;
 // START TABLA DE SIMBOLOS
 void insertarTablaSimbolos(char * nombre, int tipo, char * dato, int longitud) {
     int i;
@@ -59,8 +60,6 @@ int chuparPolaca() {
     // levanta polaca
     FILE * archivo;
     archivo = fopen("intermedia.txt", "rt");
-
-    printf("Funca la polaquita1\n");
 
     if (!archivo) {
 		return 1;
@@ -223,20 +222,19 @@ int generarInstrucciones() {
         return 1;
     }
     
+    t_tag ts[200];
+    int cant = 0;
     char * op1;
     char * op2;
     int i;
-    printf("El contador de polaquita es: %d\n", contadorPolaquita);
     for (i = 0; i < contadorPolaquita; i++) {
-        if (i == posicion) {
-            posicion = -1;
-            fprintf(fp, "%s:\n", etiqueta);
+        int findTag = getTag(ts, i ,cant, flagWhile);
+        if (findTag >= 0 && !flagWhile) {
+            fprintf(fp, "etiqueta%d:\n", findTag);
         }
 
         char * dato = polaquita[i];
         dato[strlen(dato) - 1] = '\0';
-        printf("Vamos a analizar: %s\n", dato);
-        printf("Largo de la cadena %lu\n", strlen(dato));
         if (strcmp(dato, MAS) == 0) {
             op1 = desapilarOperador();
             op2 = desapilarOperador();
@@ -260,43 +258,75 @@ int generarInstrucciones() {
             fprintf(fp, "fcom\n");
             fprintf(fp, "fstsw ax\n");
             fprintf(fp, "sahf\n");
+            contCMP++;
         } else if (strcmp(dato, SALTO_POR_DISTINTO) == 0) {
-            pedirEtiqueta();
+            if (contCMP <= 1) {
+                pedirEtiqueta();
+                ts[cant].tag = numeroEtiqueta-1;
+            }
             fprintf(fp, "JNE %s\n", etiqueta);
             esPosicion = 1;
+        } else if (strcmp(dato, SALTO_POR_MAYOR_IGUAL) == 0) {
+            // hacky porque si no pide el if adentro del else etiqueta
+            // cuando no deberia. Hack111
+            /*if (contCMP <= 1) {
+                pedirEtiqueta();
+                ts[cant].tag = numeroEtiqueta-1;
+            }*/
+            fprintf(fp, "BGE %s\n", etiqueta);
+            esPosicion = 1;
+            pedir = 0;
         } else if (strcmp(dato, SALTO_POR_MAYOR) == 0) {
-            pedirEtiqueta();
+            if (contCMP <= 1) {
+                pedirEtiqueta();
+                ts[cant].tag = numeroEtiqueta-1;
+            }
             fprintf(fp, "BGT %s\n", etiqueta);
             esPosicion = 1;
         } else if (strcmp(dato, SALTO_IGUAL) == 0) {
-            pedirEtiqueta();
+            if (contCMP <= 1) {
+                pedirEtiqueta();
+                ts[cant].tag = numeroEtiqueta-1;
+            }
             fprintf(fp, "BE %s\n", etiqueta);
             esPosicion = 1;
         } else if (strcmp(dato, SALTO_POR_MENOR_O_IGUAL) == 0) {
-            pedirEtiqueta();
+            if (contCMP <= 1) {
+                pedirEtiqueta();
+                ts[cant].tag = numeroEtiqueta-1;
+            }
             fprintf(fp, "BLE %s\n", etiqueta);
             esPosicion = 1;
         } else if (strcmp(dato, SALTO_INCONDICIONAL) == 0) {
-            int numEtiqueta = pilaPosicionRetornoCondicional[--posActualPilaRetornoCondicional];
-            fprintf(fp, "BI etiqueta%d\n", numEtiqueta);
+            if (!flagWhile) {
+                pedirEtiqueta();
+                fprintf(fp, "BI %s\n", etiqueta);
+            } else {
+                int tag = getTag(ts,0,cant,flagWhile);
+                fprintf(fp, "BI etiqueta%d\n", tag);
+                fprintf(fp, "%s:\n", etiqueta);
+                flagWhile = 0;
+            }
+            contCMP = 0;
         } else if (strcmp(dato, SALTO_WHILE) == 0) {
-          // ET
+            //ET
             pedirEtiqueta();
             fprintf(fp, "%s:\n", etiqueta);
-            pilaPosicionRetornoCondicional[posActualPilaRetornoCondicional++] = numeroEtiqueta - 1;
+            esPosicion = 1;
+            ts[cant].tag = numeroEtiqueta - 1;
+            ts[cant].position = i;
+            ts[cant].isWhile = 1;
             flagWhile = 1;
+            cant++; 
         } else if (strcmp(dato, LEER) == 0) {
             esLectura = 1;
         } else if (strcmp(dato, ESCRIBIR) == 0) {
             esEscritura = 1;
         } else {
-            if(esPosicion) {
+            if(esPosicion && !flagWhile) {
                 esPosicion = 0;
                 posicion = atoi(dato) - 1;
-
-                // t_pila_retorno aux;
-                // aux.numeroEtiqueta = ;
-                // aux.posicionDeSalto = ;
+                ts[cant++].position = posicion;
             } else if(esEscritura) {
                 esEscritura = 0;
                 int indexTipoDato = obtenerTipoDeDato(i);
@@ -308,14 +338,40 @@ int generarInstrucciones() {
             } else if(esLectura) {
                 esLectura = 0;
                 fprintf(fp, "GetInteger %s\n", dato);
+            } else {
+                apilarOperador(dato);
             }
-            printf("APLINADO OPERADOR: %s\n", dato);
-            apilarOperador(dato);
         }
     }
+    fprintf(fp, "%s:\n", etiqueta);
     fclose(fp);
   
     return 0;
+}
+
+int getTag(t_tag ts[],int position,int cant,int isWhile) {
+    int i = 0;
+    int found = -1;
+    if(!isWhile){
+        while(i < cant){
+         if(ts[i].position == position){
+            found = 1;
+            break;
+         }
+         i++;
+        }
+    }else{
+        for(i=cant;i>0;i--){
+            if(ts[i].isWhile == 1) {
+                found = 1;
+                break;
+            }
+        }
+    }
+    if (found == -1) {
+        return -1;
+    }
+    return ts[i].tag; 
 }
 
 int generarFooter() {
@@ -364,6 +420,7 @@ void pedirAux(char * aux) {
 }
 
 void pedirEtiqueta() {
+    if(pedir == 1)
     sprintf(etiqueta, "etiqueta%d", numeroEtiqueta++);
 }
 
