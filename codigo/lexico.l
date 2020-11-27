@@ -97,7 +97,10 @@ SIMB_PUNTO_COMA		";"
 							int cantCaracteres = strlen(yytext);
 							if(cantCaracteres <= 32) { //Cuenta las commillas tambien
 								printf("\nCADENA CARATERES: %s\n", yytext);
-								insertarTablaSimbolos(indicarNombreConstante(yylval.str_val), T_CTE_STRING, strdup(yytext), strlen(yylval.str_val));
+								
+								char * aux = indicarNombreConstanteString(yylval.str_val);
+								insertarTablaSimbolos(aux, T_CTE_STRING, strdup(yytext), strlen(yylval.str_val));
+								yylval.str_val = aux;
 
 								return CADENA_CARACTERES;
 							} else {
@@ -106,12 +109,14 @@ SIMB_PUNTO_COMA		";"
 								strncpy(otherString, yytext, 31);
 								otherString[31] = '\"';
 								otherString[32] = '\0';
-								insertarTablaSimbolos(indicarNombreConstante(otherString), T_CTE_STRING, otherString, strlen(otherString));
 
+								char * aux = indicarNombreConstanteString(otherString);
+								yylval.str_val = aux;
+								insertarTablaSimbolos(aux, T_CTE_STRING, otherString, strlen(otherString));
 								return CADENA_CARACTERES;
 							}
 						}
-{ID}       	{
+{ID}      			 	{
 							printf("\nID: %s\n", yytext);
 							yylval.str_val = strdup(yytext);
 							insertarTablaSimbolos(yylval.str_val, T_ID, "?", 0);

@@ -1,5 +1,0 @@
-INCLUDE macros2.asm
-INCLUDE number.asm
-.MODEL LARGE
-.386
-.STACK 200h

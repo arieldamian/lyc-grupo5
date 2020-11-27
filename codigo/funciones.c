@@ -28,6 +28,8 @@ int posActualPilaOperandos = 0;
 int flagWhile = 0;
 int contCMP = 0;
 int isElse = 0;
+int indiceString = 0;
+
 // START TABLA DE SIMBOLOS
 void insertarTablaSimbolos(char * nombre, int tipo, char * dato, int longitud) {
     int i;
@@ -50,9 +52,28 @@ void mostrarTablaSimbolos() {
 	}
 }
 
+char *strrmc(char *str, char ch){
+    char *from, *to;
+    from = to = str;
+    while(*from){
+        if(*from == ch)
+            ++from;
+        else
+            *to++ = *from++;
+    }
+    *to = '\0';
+    return str;
+}
+
 char * indicarNombreConstante(const char * valor) {
 	char nombre[100] = "_";
 	strcat(nombre, valor);
+	return strdup(nombre);
+}
+
+char * indicarNombreConstanteString(const char * valor) {
+	char nombre[100];
+    sprintf(nombre, "_cteString%d", indiceString++);
 	return strdup(nombre);
 }
 
@@ -99,7 +120,7 @@ int tsCrearArchivo() {
 			fprintf(archivo, "%-32s%-13s\n", tablaSimbolos[i].nombre, obtenerNombreTipo(tablaSimbolos[i].tipo));
 		} else {
 			fprintf(archivo, "%-32s%-13s%-32s%-12d\n",
-			indicarNombreConstante(tablaSimbolos[i].nombre), obtenerNombreTipo(tablaSimbolos[i].tipo), tablaSimbolos[i].dato, tablaSimbolos[i].longitud);
+			tablaSimbolos[i].nombre, obtenerNombreTipo(tablaSimbolos[i].tipo), tablaSimbolos[i].dato, tablaSimbolos[i].longitud);
 		}
 	}
 	fclose(archivo);
@@ -108,13 +129,14 @@ int tsCrearArchivo() {
 }
 
 int obtenerTipoDeDato(int posicionPolaquita) {
-  int encontrado = 0;
-  int i = 0;
-
-  // polaquita[posicionPolaquita][0]
-  if (polaquita[posicionPolaquita][0] == '"') {
+  if (polaquita[posicionPolaquita][0] == '_') {
     return T_CTE_STRING;
-  } 
+  } else if (isNumber(polaquita[posicionPolaquita])){
+      if (isFloat(polaquita[posicionPolaquita])) {
+          return T_FLOAT;
+      }
+      return T_CTE_INTEGER;
+  }
 
   return T_ID;
 }
@@ -129,6 +151,8 @@ char * obtenerNombreTipo(const int tipo) {
 			return "FLOAT";
 		case T_ID:
 			return "IDENTIFICADOR";
+        default:
+            return "";
 	}
 }
 
@@ -156,12 +180,10 @@ void generarAssembler() {
 		exit(1);
 	}
 
-    /*
   if (ensamblar()) {
 		printf("Error al ensamblar el archivo final\n");
 		exit(1);
   }
-  */
 }
 
 int generarHeader() {
@@ -170,7 +192,7 @@ int generarHeader() {
 		return 1;
 	}
 
-	fprintf(fp, "INCLUDE macros2.asm\n");
+  fprintf(fp, "INCLUDE macros2.asm\n");
   fprintf(fp, "INCLUDE number.asm\n");
   fprintf(fp, ".MODEL LARGE\n");
   fprintf(fp, ".386\n");
@@ -192,11 +214,20 @@ int generarData() {
   fprintf(fp, "\tMAXTEXTSIZE equ %d\n", 200);
 
   int i;
+  int cteString = 1;
+  char cte[33]; 
   for (i = 0; i < posActualTablaSimbolos; i++) {
-    if (tablaSimbolos[i].tipo == T_CTE_STRING)
+    if (tablaSimbolos[i].tipo == T_CTE_STRING){
       fprintf(fp, "%-32s\tdb\t%s,'$', %d dup (?)\n", tablaSimbolos[i].nombre, tablaSimbolos[i].dato, tablaSimbolos[i].longitud);
-    else
-      fprintf(fp, "%-32s\tdd\t%s\n", tablaSimbolos[i].nombre, tablaSimbolos[i].dato);
+    } else {
+        if(tablaSimbolos[i].tipo == T_CTE_INTEGER && tablaSimbolos[i].nombre[0] != '@' ){
+            sprintf(cte, "%s", strrmc(tablaSimbolos[i].nombre, '.'));
+            fprintf(fp, "%-32s\tdd\t%s.0\n", cte, tablaSimbolos[i].dato);
+        } else {
+            sprintf(cte, "%s", strrmc(tablaSimbolos[i].nombre, '.'));
+            fprintf(fp, "%-32s\tdd\t%s\n", cte, tablaSimbolos[i].dato);
+        }
+    }
   }
   fprintf(fp, "\n.CODE\n");
   fprintf(fp, "START:\n");
@@ -222,6 +253,9 @@ int generarInstrucciones() {
         return 1;
     }
     
+    t_tag tAux;
+    t_aux auxs[200];
+    int cantAux = 0;
     t_tag ts[200];
     int cant = 0;
     char * op1;
@@ -229,51 +263,161 @@ int generarInstrucciones() {
     int i;
     for (i = 0; i < contadorPolaquita; i++) {
         int findTag = getTag(ts, i ,cant, flagWhile);
-        if (findTag >= 0 && !flagWhile) {
-            fprintf(fp, "etiqueta%d:\n", findTag);
+        if (findTag >= 0) {
+            int tagFound = isPositionTag(ts,i,cant,&tAux);
+            if(tagFound && !tAux.isWhile){
+                fprintf(fp, "etiqueta%d:\n", tAux.tag);
+            }
         }
 
         char * dato = polaquita[i];
         dato[strlen(dato) - 1] = '\0';
+        if (dato[0] == '@') {
+            char aux[20];
+            int found = getAux(auxs, cantAux, dato, aux);
+            if (!found){
+                pedirAux(aux);
+                strcpy(auxs[cantAux].name, dato);
+                strcpy(auxs[cantAux].auxName, aux);
+                printf("\n");
+                printf("****** %s -- %s ******\n", dato, aux);
+                cantAux++;
+            }
+            strcpy(dato, aux);
+        } 
         if (strcmp(dato, MAS) == 0) {
+            char auxOperador[20];
+
             op1 = desapilarOperador();
             op2 = desapilarOperador();
-            fprintf(fp, "fild %s\n", op1);
-            fprintf(fp, "fild %s\n", op2);
+
+            if (isNumber(op1) || isFloat(op1)) {
+                sprintf(auxOperador, "_%s", strrmc(op1, '.'));
+                fprintf(fp, "fld %s\n", auxOperador);
+            } else {
+                fprintf(fp, "fld %s\n", op1);
+            }
+            
+            if (isNumber(op2) || isFloat(op2)) {
+                sprintf(auxOperador, "_%s",  strrmc(op2, '.'));    
+                fprintf(fp, "fld %s\n", auxOperador);
+            } else {
+                fprintf(fp, "fld %s\n", op2);
+            }
+            
             fprintf(fp, "fadd\n");
             char aux[20];
             pedirAux(aux);
-            fprintf(fp, "fistp %s\n", aux);
+            fprintf(fp, "fstp %s\n", aux);
+            apilarOperador(aux);
+        } else if (strcmp(dato, DIVIDIDO) == 0) {
+            char auxOperador[20];
+            op1 = desapilarOperador();
+            op2 = desapilarOperador();
+            if (isNumber(op1) || isFloat(op1)) {
+                sprintf(auxOperador, "_%s",  strrmc(op1, '.'));    
+                fprintf(fp, "fld %s\n", auxOperador);
+            } else {
+                fprintf(fp, "fld %s\n", op1);
+            }
+            
+            if (isNumber(op2) || isFloat(op2)) {
+                sprintf(auxOperador, "_%s",  strrmc(op2, '.'));    
+                fprintf(fp, "fld %s\n", auxOperador);
+            } else {
+                fprintf(fp, "fld %s\n", op2);
+            }
+            
+            fprintf(fp, "fdiv\n");
+            char aux[20];
+            pedirAux(aux);
+            fprintf(fp, "fstp %s\n", aux);
+            apilarOperador(aux);
+         } else if (strcmp(dato, MULTIPLICACION) == 0) {
+            char auxOperador[20];
+            op1 = desapilarOperador();
+            op2 = desapilarOperador();
+            if (isNumber(op1) || isFloat(op1)) {
+                sprintf(auxOperador, "_%s", strrmc(op1, '.'));
+                fprintf(fp, "fld %s\n", auxOperador);
+            } else {
+                fprintf(fp, "fld %s\n", op1);
+            }
+            
+            if (isNumber(op2) || isFloat(op2)) {
+                sprintf(auxOperador, "_%s",  strrmc(op2, '.'));    
+                fprintf(fp, "fld %s\n", auxOperador);
+            } else {
+                fprintf(fp, "fld %s\n", op2);
+            }
+            
+            fprintf(fp, "fmul\n");
+            char aux[20];
+            pedirAux(aux);
+            fprintf(fp, "fstp %s\n", aux);
             apilarOperador(aux);
         } else if (strcmp(dato, IGUAL) == 0 || strcmp(dato, IGUAL_2) == 0) {
             op1 = desapilarOperador();
             op2 = desapilarOperador();
-            fprintf(fp, "fild %s\n", op2);
-            fprintf(fp, "fistp %s\n", op1);
+            char auxOperador[20];
+        
+            if (isNumber(op1)){
+                if (isNumber(op1) || isFloat(op1)) {
+                    sprintf(auxOperador, "_%s", strrmc(op1, '.'));
+                    fprintf(fp, "fld %s\n", auxOperador);
+                } else {
+                    fprintf(fp, "fld %s\n", op1);
+                }
+                
+                fprintf(fp, "fstp %s\n", op2);
+            } else {
+                if (isNumber(op2) || isFloat(op2)) {
+                    sprintf(auxOperador, "_%s",  strrmc(op2, '.'));    
+                    fprintf(fp, "fld %s\n", auxOperador);
+                } else {
+                    fprintf(fp, "fld %s\n", op2);
+                }
+
+                fprintf(fp, "fstp %s\n", op1);
+            }
         } else if (strcmp(dato, CMP) == 0) {
+            char auxOperador[20];
+            
             op1 = desapilarOperador();
             op2 = desapilarOperador();
-            fprintf(fp, "fild %s\n", op1);
-            fprintf(fp, "fild %s\n", op2);   
+            if (isNumber(op1) || isFloat(op1)) {
+                sprintf(auxOperador, "_%s",  strrmc(op1, '.'));    
+                fprintf(fp, "fld %s\n", auxOperador);
+            } else {
+                fprintf(fp, "fld %s\n", op1);
+            }
+
+            if (isNumber(op2) || isFloat(op2)) {
+                sprintf(auxOperador, "_%s",  strrmc(op2, '.'));    
+                fprintf(fp, "fld %s\n", auxOperador);
+            } else {
+                fprintf(fp, "fld %s\n", op2);
+            }
+            
             fprintf(fp, "fcom\n");
             fprintf(fp, "fstsw ax\n");
             fprintf(fp, "sahf\n");
             contCMP++;
         } else if (strcmp(dato, SALTO_POR_DISTINTO) == 0) {
-            if (contCMP <= 1) {
+            // if (contCMP <= 1) {
                 pedirEtiqueta();
                 ts[cant].tag = numeroEtiqueta-1;
-            }
+            // }
             fprintf(fp, "JNE %s\n", etiqueta);
             esPosicion = 1;
         } else if (strcmp(dato, SALTO_POR_MAYOR_IGUAL) == 0) {
-            // hacky porque si no pide el if adentro del else etiqueta
+            // **hacky** porque si no pide el if adentro del else etiqueta
             // cuando no deberia. Hack111
             /*if (contCMP <= 1) {
                 pedirEtiqueta();
                 ts[cant].tag = numeroEtiqueta-1;
             }*/
-            fprintf(fp, "BGE %s\n", etiqueta);
+            fprintf(fp, "JAE %s\n", etiqueta);
             esPosicion = 1;
             pedir = 0;
         } else if (strcmp(dato, SALTO_POR_MAYOR) == 0) {
@@ -281,35 +425,34 @@ int generarInstrucciones() {
                 pedirEtiqueta();
                 ts[cant].tag = numeroEtiqueta-1;
             }
-            fprintf(fp, "BGT %s\n", etiqueta);
+            fprintf(fp, "JA %s\n", etiqueta);
             esPosicion = 1;
         } else if (strcmp(dato, SALTO_IGUAL) == 0) {
             if (contCMP <= 1) {
                 pedirEtiqueta();
                 ts[cant].tag = numeroEtiqueta-1;
             }
-            fprintf(fp, "BE %s\n", etiqueta);
+            fprintf(fp, "JE %s\n", etiqueta);
             esPosicion = 1;
         } else if (strcmp(dato, SALTO_POR_MENOR_O_IGUAL) == 0) {
             if (contCMP <= 1) {
                 pedirEtiqueta();
                 ts[cant].tag = numeroEtiqueta-1;
             }
-            fprintf(fp, "BLE %s\n", etiqueta);
+            fprintf(fp, "JNA %s\n", etiqueta);
             esPosicion = 1;
         } else if (strcmp(dato, SALTO_INCONDICIONAL) == 0) {
             if (!flagWhile) {
                 pedirEtiqueta();
-                fprintf(fp, "BI %s\n", etiqueta);
+                fprintf(fp, "JMP %s\n", etiqueta);
             } else {
                 int tag = getTag(ts,0,cant,flagWhile);
-                fprintf(fp, "BI etiqueta%d\n", tag);
-                fprintf(fp, "%s:\n", etiqueta);
+                fprintf(fp, "JMP etiqueta%d\n", tag);
+                // fprintf(fp, "%s:\n", etiqueta);
                 flagWhile = 0;
             }
             contCMP = 0;
         } else if (strcmp(dato, SALTO_WHILE) == 0) {
-            //ET
             pedirEtiqueta();
             fprintf(fp, "%s:\n", etiqueta);
             esPosicion = 1;
@@ -317,33 +460,37 @@ int generarInstrucciones() {
             ts[cant].position = i;
             ts[cant].isWhile = 1;
             flagWhile = 1;
+            esPosicion = 0;
             cant++; 
         } else if (strcmp(dato, LEER) == 0) {
             esLectura = 1;
         } else if (strcmp(dato, ESCRIBIR) == 0) {
             esEscritura = 1;
         } else {
-            if(esPosicion && !flagWhile) {
+            if(esPosicion) {
                 esPosicion = 0;
-                posicion = atoi(dato) - 1;
-                ts[cant++].position = posicion;
+                posicion = atoi(dato) + 1;
+                ts[cant].position = posicion;
+                ts[cant].isWhile = 0;
+                cant++;
             } else if(esEscritura) {
                 esEscritura = 0;
                 int indexTipoDato = obtenerTipoDeDato(i);
                 if(indexTipoDato == T_CTE_STRING)
                     fprintf(fp, "DisplayString %s\n", dato);
-                else if(indexTipoDato == T_ID)
-                    fprintf(fp, "DisplayInteger %s\n", dato);
+                else {
+                    fprintf(fp, "DisplayFloat %s, 2\n", dato);
+                }
                 fprintf(fp, "newLine 1\n");
             } else if(esLectura) {
                 esLectura = 0;
-                fprintf(fp, "GetInteger %s\n", dato);
+                fprintf(fp, "GetFloat %s\n", dato);   
             } else {
                 apilarOperador(dato);
             }
         }
     }
-    fprintf(fp, "%s:\n", etiqueta);
+    fprintf(fp, "%s:\n", etiqueta); 
     fclose(fp);
   
     return 0;
@@ -361,7 +508,7 @@ int getTag(t_tag ts[],int position,int cant,int isWhile) {
          i++;
         }
     }else{
-        for(i=cant;i>0;i--){
+        for(i=cant;i>=0;i--){
             if(ts[i].isWhile == 1) {
                 found = 1;
                 break;
@@ -372,6 +519,36 @@ int getTag(t_tag ts[],int position,int cant,int isWhile) {
         return -1;
     }
     return ts[i].tag; 
+}
+
+int isPositionTag(t_tag ts[],int position,int cant, t_tag* tAux) {
+    int i = 0;
+    int found = 0; 
+    while(i < cant){
+        if(ts[i].position == position) {
+            found = 1;
+            break;
+        }
+        i++;
+    }
+    tAux->isWhile = ts[i].isWhile;
+    tAux->position = ts[i].position;
+    tAux->tag = ts[i].tag;
+    return found; 
+}
+
+int getAux(t_aux auxs[], int cant, char * name , char * var ) {
+    int i = 0;
+    int found = 0;
+    while(i < cant){
+        if(strcmp(auxs[i].name,name) == 0){
+            found = 1;
+            strcpy(var,auxs[i].auxName);
+            break;
+        }
+        i++;
+    }
+    return found;
 }
 
 int generarFooter() {
@@ -394,7 +571,7 @@ int ensamblar() {
 		return 1;
     if(unirArchivo(fp, "./assembler/header", buffer) ||
     unirArchivo(fp, "./assembler/data", buffer) ||
-    // unirArchivo(fp, "./assembler/instrucciones", buffer) ||
+    unirArchivo(fp, "./assembler/instrucciones", buffer) ||
     unirArchivo(fp, "./assembler/footer", buffer))
 		return 1;
     fclose(fp);
@@ -424,24 +601,36 @@ void pedirEtiqueta() {
     sprintf(etiqueta, "etiqueta%d", numeroEtiqueta++);
 }
 
-int verTopeDePilaPosiciones() {
-	return posActualPilaPosiciones;
-}
-
-void apilarPosicion(int pos) {
-	pilaPosiciones[posActualPilaPosiciones++] = pos;
-} 
-
-int desapilarPosicion() {
-	return pilaPosiciones[--posActualPilaPosiciones];
-}
-
 void apilarOperador(char * op) {
 	pilaOperandos[posActualPilaOperandos++] = op;
 } 
 
 char * desapilarOperador() {
 	return pilaOperandos[--posActualPilaOperandos];
+}
+
+int isNumber(char* s){
+    int i = 0;
+    while(s[i] != '\0') {
+        if (!isnumber(s[i])) {
+            return 0;
+        }
+        i++;
+    }
+    return 1;
+}
+
+int isFloat(char* s){
+    int flag = 0;
+    int i = 0;
+    while(s[i++] != '\0') {
+        if(s[i] == '.') {
+            flag = 1;
+            break;
+        }
+    }
+    if(flag) return 1;
+    return 0;
 }
 
 // END ASM

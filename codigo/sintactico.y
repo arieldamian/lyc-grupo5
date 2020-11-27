@@ -144,7 +144,7 @@ tipo:
 
 factor: 
   ID {
-	if ((isWhile && !asigSuma) || isIf || isContar || isOperacion) {
+	if ((isWhile && !asigSuma) || isIf || isContar) {
 		ponerEnPolaca(&polaca, yylval.str_val);
 	} else {
 		t_info info;
@@ -160,7 +160,7 @@ factor:
 		ponerEnPolaca(&polaca, "@aux");
 		ponerEnPolaca(&polaca, yylval.int_val);
 		ponerEnPolaca(&polaca, "=");
-	} else if (isIf || isIfAnidado || isContar || isWhile || isOperacion) {
+	} else if (isIf || isIfAnidado || isContar || isWhile) {
 		ponerEnPolaca(&polaca, yylval.int_val);
 		isIf = 0;
 		isWhile = 0;
@@ -194,11 +194,28 @@ func_contar:
 	  ponerEnPolaca(&polaca, "0");
 	  ponerEnPolaca(&polaca, "=");
 	} PAR_ABRE termino {
-	ponerEnPolaca(&polaca,"=");
 	ponerEnPolaca(&polaca,"@pivot");
+	ponerEnPolaca(&polaca,"=");	
   } SIMB_PUNTO_COMA lista PAR_CIERRA {
 	  isContar = 0;
+	  
 	  ponerEnPolaca(&polaca,"@cont");
+	  if(!pilaVacia(&pilaTerminales)) {
+		  t_info* info = sacarDePila(&pilaTerminales);
+		  ponerEnPolaca(&polaca,info->cadena);
+	  }
+	  if(!pilaVacia(&pila)) {
+		  t_info* info = sacarDePila(&pila);
+		  ponerEnPolaca(&polaca,info->cadena);
+	  }
+	  ponerEnPolaca(&polaca,"@auxmult");
+	  ponerEnPolaca(&polaca,"=");
+
+	  
+	  t_info info2;
+	  info2.cadena=(char*)malloc(sizeof(char)*CADENA_MAXIMA);
+	  strcpy(info2.cadena, "@auxmult");
+	  ponerEnPila(&pilaTerminales,  &info2);
 	  printf("CONTAR (termino ; lista) es una FUNC_CONTAR \n");
 	}
   ;
@@ -215,6 +232,8 @@ lista:
 	  
 	  ponerEnPolaca(&polaca, "@cont");
 	  ponerEnPolaca(&polaca, "1");
+	  ponerEnPolaca(&polaca, "+");
+	  ponerEnPolaca(&polaca, "@cont");
 	  ponerEnPolaca(&polaca, "=");
 
 	  ponerEnPolacaNro(&polaca, pos, itoa(contadorPolaca));
@@ -234,8 +253,8 @@ lista:
 	  ponerEnPolaca(&polaca, "@cont");
 	  ponerEnPolaca(&polaca, "1");
 	  ponerEnPolaca(&polaca, "+");
-	  ponerEnPolaca(&polaca, "=");
 	  ponerEnPolaca(&polaca, "@cont");
+	  ponerEnPolaca(&polaca, "=");
 
 	  ponerEnPolacaNro(&polaca, pos, itoa(contadorPolaca));
 
@@ -254,21 +273,36 @@ term:
 	strcpy(info.cadena, yylval.cmp_val);
     ponerEnPila(&pila,  &info);
   } factor {
-	t_info* info = sacarDePila(&pila);
-	ponerEnPolaca(&polaca,info->cadena);
-	printf("Termino*Factor es Termino\n");
-	if (isContarLista) {
-      ponerEnPolaca(&polaca, "@aux");
-	  ponerEnPolaca(&polaca, "=");
-	}
+	  	if (isContar) {
+	  		t_info* info = sacarDePila(&pila);
+			ponerEnPolaca(&polaca,info->cadena);
+	  	}
+			
+		if (isContarLista) {
+			ponerEnPolaca(&polaca, "@aux");
+			ponerEnPolaca(&polaca, "=");
+		}
+
+		printf("Termino*Factor es Termino\n");
   } | termino OP_DIV {
 	t_info info;
 	info.cadena=(char*)malloc(sizeof(char)*CADENA_MAXIMA);
 	strcpy(info.cadena, yylval.cmp_val);
     ponerEnPila(&pila,  &info);
   } factor{
+	  while(!pilaVacia(&pilaTerminales)) {
+		  t_info* info = sacarDePila(&pilaTerminales);
+		  ponerEnPolaca(&polaca,info->cadena);
+	  }
 	  t_info* info = sacarDePila(&pila);
 	  ponerEnPolaca(&polaca,info->cadena);
+	  ponerEnPolaca(&polaca,"@auxdiv");
+   	  ponerEnPolaca(&polaca,"=");
+	  
+	  t_info info2;
+	  info2.cadena=(char*)malloc(sizeof(char)*CADENA_MAXIMA);
+	  strcpy(info2.cadena, "@auxdiv");
+	  ponerEnPila(&pilaTerminales,  &info2);
 	  printf("Termino/Factor es Termino\n");
 	}
   ;
@@ -331,7 +365,6 @@ asignacion:
 			t_info* info = sacarDePila(&pilaAux);
 			ponerEnPolaca(&polaca,info->cadena);
 		}
-
 		asigSuma = 0;
 	} else {
 		if(!pilaVacia(&pila)){

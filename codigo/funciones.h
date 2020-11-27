@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 // START TABLA DE SIMBOLOS
 
@@ -11,9 +12,11 @@
 
 #define MAS "+"
 #define IGUAL "="
+#define DIVIDIDO "/"
+#define MULTIPLICACION "*"
 #define IGUAL_2 ":"
 #define CMP "CMP"
-#define SALTO_POR_DISTINTO "JNE"
+#define SALTO_POR_DISTINTO "BNE"
 #define SALTO_POR_MAYOR "BGT"
 #define SALTO_POR_MAYOR_IGUAL "BGE"
 #define SALTO_POR_MENOR_O_IGUAL "BLE"
@@ -22,6 +25,11 @@
 #define SALTO_WHILE "ET"
 #define LEER "GET"
 #define ESCRIBIR "PUT"
+
+typedef struct {
+	char name[20];
+    char auxName[20];
+} t_aux;
 
 typedef struct {
 	int tag;
@@ -46,11 +54,18 @@ void mostrarTablaSimbolos();
 int tsCrearArchivo();
 
 char * indicarNombreConstante(const char *);
+char * indicarNombreConstanteString(const char *);
 char * obtenerNombreTipo(int);
+char *strrmc(char *str, char ch);
 // END TABLA DE SIMBOLOS
 
 // START ASM
+int isCustomAux(t_aux auxs[], int cant, char * auxName);
+int isNumber(char* s);
+int isFloat(char* s);
+int getAux(t_aux auxs[], int cant, char * name , char * var );
 int getTag(t_tag ts[],int position,int cant,int isWhile);
+int isPositionTag(t_tag ts[],int position,int cant, t_tag* tAux);
 void generarAssembler();
 int generarHeader();
 int generarInstrucciones();
