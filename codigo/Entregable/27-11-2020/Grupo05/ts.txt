@@ -1,0 +1,21 @@
+Nombre                          Tipo         Valor                           Longitud    
+contador                        IDENTIFICADOR
+promedio                        IDENTIFICADOR
+actual                          IDENTIFICADOR
+suma                            IDENTIFICADOR
+nombre                          IDENTIFICADOR
+_80                             INTEGER      
+_cteString0                     STRING       "Prueba.txt LyC Tema 4!"        24          
+_cteString1                     STRING       "Ingrese un valor entero para a"32          
+_0                              INTEGER      
+_02.5                           FLOAT        
+_92                             INTEGER      
+_1                              INTEGER      
+_0.342                          FLOAT        
+_256                            INTEGER      
+_52                             INTEGER      
+_4                              INTEGER      
+_cteString2                     STRING       "La suma es: "                  14          
+_2                              INTEGER      
+_cteString3                     STRING       "actual es mayor que 2 y distin"32          
+_cteString4                     STRING       "no es mayor que 2"             19          
